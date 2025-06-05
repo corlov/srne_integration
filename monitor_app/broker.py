@@ -1,0 +1,39 @@
+import paho.mqtt.client as mqtt
+import logging
+import utils as u
+
+MQTT_SERVER_ADDR = "192.168.1.199"
+MQTT_PORT = 1883
+MQTT_USER = 'srne_user'
+MQTT_PASS = 'qwe123'
+
+TOPIC_TELEMETRY = "srne/dynamic_information"
+TOPIC_SETTINGS = "srne/settings"
+TOPIC_SYS_INFO = "srne/system_information"
+
+# mosquitto_sub -h localhost -t "test/topic" -u "srne_user" -P "qwe123"
+# mosquitto_pub -h localhost -t "test/topic" -m "Hello MQTT!" -u "srne_user" -P "qwe123"
+
+def connectMqtt():
+    def onConnect(client, userdata, flags, rc):
+        if rc != 0:
+            u.logmsg(f"Failed to mqtt broker connect, return code {rc}")
+
+    client = mqtt.Client()
+    client.username_pw_set(MQTT_USER, MQTT_PASS)
+    client.on_connect = onConnect
+    client.connect(MQTT_SERVER_ADDR, MQTT_PORT)
+    return client
+
+
+
+def publish(topic_name, message_text):
+    client = connectMqtt()
+    if client.is_connected:
+        result = client.publish(topic_name, message_text)
+        status = result[0]
+        if status != 0:
+            u.logmsg(f"Failed to send message to topic {topic_name}")
+        client.disconnect()
+
+

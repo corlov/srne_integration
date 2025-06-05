@@ -1,0 +1,5 @@
+RK_TELEMETRY = 'telemetry'
+RK_SYS_INFO = 'system_information'
+RK_SETTINGS = 'eeprom_parameter_setting'
+RK_COMMAND = 'command'
+RK_HISTORY = 'history'

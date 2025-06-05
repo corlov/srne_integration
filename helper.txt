@@ -1,0 +1,94 @@
+# SELECT 
+#     id,
+#     payload->'load'->>'dailyPower',
+#     payload->'load'->>'totalPower',
+#     payload->'battery'->>'volts'
+# FROM 
+#     device.dynamic_information
+# where     
+#     CAST(payload->'load'->>'dailyPower' AS DOUBLE PRECISION) > 0.01
+
+
+
+SELECT 
+     *
+ FROM 
+     device.dynamic_information order by created_at desc limit 10
+
+
+docker pull openapitools/openapi-generator-cli
+
+sudo docker run --rm -v ${PWD}:/local \
+  openapitools/openapi-generator-cli generate \
+  -i /local/srne.json \
+  -g python-flask \
+  -o /local/flask_app
+  
+  
+sudo docker run --rm \
+  -v /home/kostya/work/OREL/code/srne/:/local \
+  openapitools/openapi-generator-cli generate \
+  -i /local/srne.json \
+  -g python-flask \
+  -o /local/flask_app  
+  
+  
+# Как запустить сгенеренное фласк-приложение  
+sudo apt install python3.10-venv
+sudo python3 -m venv venv
+source venv/bin/activate
+sudo pip3 install -r requirements.txt
+sudo python3 -m openapi_server
+
+Проверка работы приложения:
+    http://127.0.0.1:8080/v1/dynamic_data?deviceId=2
+
+
+На репке:
+
+rm -rf /root/solar/flask_app/venv
+python3 -m venv /root/solar/flask_app/venv
+source /root/solar/flask_app/venv/bin/activate
+pip3 install -r requirements.txt
+python3 -m openapi_server
+
+source /root/solar/flask_app/venv/bin/activate
+python3 -m openapi_server
+
+
+# TODO: создать файл с вызовами test.http
+  http://192.168.1.163:8080/v1/dynamic_data?deviceId=2
+  http://192.168.1.163:8080/v1/settings?deviceId=2
+  http://192.168.1.163:8080/v1/system_info?deviceId=2
+  http://192.168.1.163:8080/v1/history?deviceId=2&date=2025-05-29
+  
+  192.168.1.163:8080/v1/control_load_on_off?deviceId=2&on=false
+  192.168.1.163:8080/v1/reset_to_factory_default_settings?deviceId=2
+  192.168.1.163:8080/v1/set_load_working_mode?deviceId=2&modeCode=15
+
+  192.168.1.163:8080/v1/set_parameters?deviceId=2&overVoltageThreshold=0&chargingLimitVoltage=0&equalizingChargingVoltage=0&boostChargingVoltage=0&floatingChargingVoltage=0&boostChargingRecovery=0&overDischargeRecovery=0&underVoltageThreshold=0&overDischargeVoltage=0&overDischargeLimitVoltage=0&endOfChargeAndDischargeCapacity=0&overDischargeTimeDelay=0&equalizingChargingTime=0&boostChargingTime=0&equalizingChargingInterval=0&temperatureCompensation=0
+
+
+
+
+
+
+Docker
+
+
+docker build --platform linux/arm64 -t solar-monitor .
+
+ 1995  touch requirements.txt
+ 1996  nano requirements.txt 
+ 1997  nano Dockerfile 
+ 1999  docker build -t solar-monitor .
+ 2003  sudo docker save -o solar-monitor.tar solar-monitor
+ 2010  sudo scp solar-monitor.tar root@192.168.1.163:/root/app
+
+
+
+docker load -i solar-monitor.tar
+docker images
+docker run solar-monitor
+
+

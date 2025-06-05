@@ -1,0 +1,5 @@
+redis
+pymodbus
+pyserial
+psycopg2
+paho-mqtt
