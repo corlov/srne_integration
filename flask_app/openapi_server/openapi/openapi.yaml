@@ -1,9 +1,9 @@
 openapi: 3.0.3
 info:
-  title: API Title
+  title: SRNE RESTFULL API
   version: "1.0"
 servers:
-- url: https://api.server.test/v1
+- url: https://<REPKA_PI_ADDR>:8080/v1
 paths:
   /clear_history:
     post:
@@ -24,6 +24,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_clear_history_post_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /command_status:
+    get:
+      description: Асинхронно получить статус отправленной ранее команды
+      operationId: command_status_get
+      parameters:
+      - description: uuid отправленной ранее команды
+        explode: true
+        in: query
+        name: uuid
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_command_status_get_200_response'
           description: OK
       x-openapi-router-controller: openapi_server.controllers.default_controller
   /control_load_on_off:
@@ -864,6 +885,31 @@ components:
           title: errorText
           type: string
       title: _clear_history_post_200_response_message
+      type: object
+    _command_status_get_200_response:
+      example:
+        errorText: errorText
+        dbId: 0
+        ok: true
+        uuid: uuid
+        ts: 6.027456183070403
+      properties:
+        dbId:
+          title: dbId
+          type: integer
+        ts:
+          title: ts
+          type: number
+        uuid:
+          title: uuid
+          type: string
+        ok:
+          title: ok
+          type: boolean
+        errorText:
+          title: errorText
+          type: string
+      title: _command_status_get_200_response
       type: object
     _dynamic_data_get_200_response_message:
       example:

@@ -9,7 +9,7 @@ def main():
     app = connexion.App(__name__, specification_dir='./openapi/')
     app.app.json_encoder = encoder.JSONEncoder
     app.add_api('openapi.yaml',
-                arguments={'title': 'API Title'},
+                arguments={'title': 'SRNE RESTFULL API'},
                 pythonic_params=True)
 
     app.run(port=8080)

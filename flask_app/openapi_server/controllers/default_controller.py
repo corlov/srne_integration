@@ -10,15 +10,13 @@ from openapi_server.models.settings_get200_response import SettingsGet200Respons
 from openapi_server.models.system_info_get200_response import SystemInfoGet200Response  # noqa: E501
 from openapi_server import util
 
+import time
 import redis
 import json
 from datetime import datetime
 import uuid
 import os
 
-
-# REDIS_ADDR = 'localhost'
-# REDIS_PORT = 6379
 
 REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
@@ -28,6 +26,7 @@ RK_SYS_INFO = 'system_information'
 RK_SETTINGS = 'eeprom_parameter_setting'
 RK_COMMAND = 'command'
 RK_HISTORY = 'history'
+RK_COMMAND_RESPONSE = 'commands_responses'
 
 
 def redis_read(key_name, device_id, additonal_params=""):
@@ -235,6 +234,48 @@ def set_parameters_post(device_id, over_voltage_threshold, charging_limit_voltag
     return json.loads(send_command(cmd, device_id))
 
 
+
+def command_status_get(uuid):  # noqa: E501
+    """command_status_get
+
+    Асинхронно получить статус отправленной ранее команды # noqa: E501
+
+    :param uuid: uuid отправленной ранее команды
+    :type uuid: str
+
+    :rtype: Union[CommandStatusGet200Response, Tuple[CommandStatusGet200Response, int], Tuple[CommandStatusGet200Response, int, Dict[str, str]]
+    """
+
+    r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
+
+    # Retrieve the existing list from Redis
+    commands_list = r.lrange(RK_COMMAND_RESPONSE, 0, -1)
+    commands_list = [item.decode('utf-8') for item in commands_list]
+    
+
+    target_response = {}
+
+    fresh_commands = []
+    for cmd in commands_list:
+        cmd = json.loads(cmd)
+        ts = float(cmd['ts'])
+        if time.time() - ts < 5*60:
+            fresh_commands.append(cmd)
+
+    for cmd in fresh_commands:
+        if uuid == cmd['uuid']:
+            target_response = cmd
+
+    # Обновляем список ответов, удалив протухшие ответы по времени
+    r.delete(RK_COMMAND_RESPONSE)
+    for cmd in fresh_commands:
+        r.rpush(RK_COMMAND_RESPONSE, json.dumps(cmd))
+
+    
+    return target_response
+
+
+
 def settings_get(device_id):  # noqa: E501
     """settings_get
 
@@ -259,3 +300,4 @@ def system_info_get(device_id):  # noqa: E501
     :rtype: Union[SystemInfoGet200Response, Tuple[SystemInfoGet200Response, int], Tuple[SystemInfoGet200Response, int, Dict[str, str]]
     """    
     return redis_read(RK_SYS_INFO, device_id)
+

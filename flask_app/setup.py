@@ -20,10 +20,10 @@ REQUIRES = [
 setup(
     name=NAME,
     version=VERSION,
-    description="API Title",
+    description="SRNE RESTFULL API",
     author_email="",
     url="",
-    keywords=["OpenAPI", "API Title"],
+    keywords=["OpenAPI", "SRNE RESTFULL API"],
     install_requires=REQUIRES,
     packages=find_packages(),
     package_data={'': ['openapi/openapi.yaml']},

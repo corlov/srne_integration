@@ -1,5 +1,6 @@
 .dockerignore
 .gitignore
+.openapi-generator-ignore
 .travis.yml
 Dockerfile
 README.md
@@ -14,6 +15,7 @@ openapi_server/models/__init__.py
 openapi_server/models/base_model.py
 openapi_server/models/clear_history_post200_response.py
 openapi_server/models/clear_history_post200_response_message.py
+openapi_server/models/command_status_get200_response.py
 openapi_server/models/dynamic_data_get200_response.py
 openapi_server/models/dynamic_data_get200_response_message.py
 openapi_server/models/dynamic_data_get200_response_message_battery.py
@@ -32,6 +34,7 @@ openapi_server/models/system_info_get200_response.py
 openapi_server/models/system_info_get200_response_message.py
 openapi_server/openapi/openapi.yaml
 openapi_server/test/__init__.py
+openapi_server/test/test_default_controller.py
 openapi_server/typing_utils.py
 openapi_server/util.py
 requirements.txt
