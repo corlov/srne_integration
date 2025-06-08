@@ -12,6 +12,7 @@ DELAY_BETWEEN_COMMANDS = 2
 
 DEVICE_ID = 2
 DEVICE_SYS_ADDR = '/dev/ttyS0'
+DEVICE_SERIAL_NUMBER = ''
 
 
 # Array of charging mode strings.

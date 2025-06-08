@@ -267,6 +267,14 @@ def read_system_information(modbus):
             if conn:
                 conn.close()
         u.logmsg('system_information updated')
+    
+    if glb.DEVICE_SERIAL_NUMBER == '':
+        sys_info = json.loads(r.get(im.RK_SYS_INFO + str(glb.DEVICE_ID)))
+        for item in sys_info:
+            if "serialNumber" in item:
+                glb.DEVICE_SERIAL_NUMBER = item["serialNumber"]
+                break
+
 
     u.logmsg('[OK]  read_system_information')
 

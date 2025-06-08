@@ -1,0 +1,1238 @@
+# http://192.168.1.163:8080/v1/dynamic_data?deviceId=2
+# http://192.168.1.163:8080/v1/settings?deviceId=2
+# http://192.168.1.163:8080/v1/system_info?deviceId=2
+# http://192.168.1.163:8080/v1/history?deviceId=2&date=2025-05-29
+# http://192.168.1.193:8080/v1/command_status?uuid=83bd3ccf-1dd2-42c6-80e8-08f3e8ef2f06
+
+
+###
+GET http://{{host}}/v1/
+
+###
+GET http://{{host}}/v1/dynamic_data?deviceId=2
+
+###
+GET http://{{host}}/v1/settings?deviceId=2
+
+###
+GET http://{{host}}/v1/system_info?deviceId=2
+
+###
+GET http://{{host}}/v1/history?deviceId=2&date=2025-05-29
+
+###
+GET http://{{host}}/v1/command_status?uuid=83bd3ccf-1dd2-42c6-80e8-08f3e8ef2f06
+
+###
+POST http://{{host}}/v1/clear_history?deviceId=2
+
+###
+POST http://{{host}}/v1/reset_to_factory_default_settings?deviceId=2
+
+###
+POST http://{{host}}/v1/set_parameters?deviceId=2&overVoltageThreshold=0&chargingLimitVoltage=0&equalizingChargingVoltage=0&boostChargingVoltage=0&floatingChargingVoltage=0&boostChargingRecovery=0&overDischargeRecovery=0&underVoltageThreshold=0&overDischargeVoltage=0&overDischargeLimitVoltage=0&endOfChargeAndDischargeCapacity=0&overDischargeTimeDelay=0&equalizingChargingTime=0&boostChargingTime=0&equalizingChargingInterval=0&temperatureCompensation=0
+
+###
+POST http://{{host}}/v1/control_load_on_off?deviceId=2&on=false
+
+###
+POST http://{{host}}/v1/control_load_on_off?deviceId=2&modeCode=11
+
+###
+POST http://{{host}}/v1/control_load_on_off?deviceId=2&currentValue=5
+
+
+
+###
+POST http://{{host}}/v1/website/results/getByUrl
+Accept: application/json
+Content-Type: application/json
+
+{
+    "url": "mitino",
+    "date": "23.07.2022"
+}
+
+###
+
+POST http://{{host}}/v1/website/results/getByUrl
+Accept: application/json
+Content-Type: application/json
+
+{
+    "url": "mitino"
+}
+
+###
+
+POST http://{{host}}/v1/results/upload
+Accept: application/json
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="timer.csv"
+
+< ./timer.csv
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="scanner.csv"
+
+< ./scanner.csv --boundary--
+
+###
+
+POST http://{{host}}/v1/results/save
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "event_id": 2100,
+    "event_date": "26.11.2022",
+    "results": [
+        {
+            "athlete_id": 790055924,
+            "finish_time": "00:30:00",
+            "position": 1
+        },
+        {
+            "athlete_id": 790076983,
+            "finish_time": "00:31:00",
+            "position": 2
+        },
+        {
+            "athlete_id": 790057244,
+            "finish_time": "00:32:00",
+            "position": 3
+        },
+        {
+            "athlete_id": {{tolok_id}},
+            "finish_time": "00:33:00",
+            "position": 5
+        },
+        {
+            "athlete_id": 790000404,
+            "finish_time": "00:34:00",
+            "position": 6
+        },
+        {
+            "athlete_id": 790000404,
+            "finish_time": "00:35:00",
+            "position": 7
+        }
+    ]
+}
+
+###
+
+POST http://{{host}}/v1/results/save
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "event_id": 999,
+    "event_date": "26.07.2022",
+    "results": [
+        {
+            "athlete_id": 790055924,
+            "finish_time": "00:30:00",
+            "position": 1
+        },
+        {
+            "athlete_id": {{tolok_id}},
+            "finish_time": "00:31:00",
+            "position": 2
+        }
+    ]
+}
+
+###
+
+OPTIONS http://localhost:3010/v1/website/event/list
+Accept: application/json
+Content-Type: application/json
+
+###
+
+POST http://{{host}}/v1/website/event/list
+Accept: application/json
+Content-Type: application/json
+
+{
+  "sort_by_city": true
+}
+
+###
+
+POST http://{{host}}/v1/website/event/list
+Accept: application/json
+Content-Type: application/json
+
+###
+
+POST http://{{host}}/v1/athlete/getById
+Accept: application/json
+Content-Type: application/json
+Authorization: chumbawamba
+
+{
+    "id": 790001017
+}
+
+###
+
+POST http://{{host}}/v1/website/athlete/getById
+Accept: application/json
+Content-Type: application/json
+
+{
+  "id": {{tolok_id}}
+}
+
+###
+
+POST http://{{host}}/v1/results/save
+Accept: application/json
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6NzkwMDAxMDE3LCJzZXNzaW9uX2lkIjoiNWI1ZjU3NWYzYWYzNGJjOWNkYjAzODBmZTk1NzRmMDQiLCJleHAiOjE2NTE3ODc3OTZ9.T8wEOFps1ObCVDT3V350nEvTnZUPAaRx74Q63Ifn9eE
+
+{
+    "event_id": 999,
+    "event_date": "01.01.2022",
+    "results": [
+        {
+            "athlete_id": 790001000,
+            "finish_time": "00:00:00",
+            "position": 1
+        },
+        {
+            "athlete_id": null,
+            "finish_time": "00:00:02",
+            "position": 2
+        },
+        {
+            "athlete_id": null,
+            "finish_time": "00:00:05",
+            "position": 3
+        }
+    ]
+}
+
+###
+
+POST http://{{host}}/v1/website/results/getByUrl
+Accept: application/json
+Content-Type: application/json
+
+{
+    "url": "chertanovopokrovskypark"
+}
+
+###
+
+POST http://{{host}}/v1/website/event/list
+Accept: application/json
+Content-Type: application/json
+
+{}
+
+###
+
+POST http://{{host}}/v1/register
+Accept: application/json
+Content-Type: application/json
+
+{
+    "first_name": "Alex",
+    "last_name": "Tolok",
+    "birthday": "06.09.1974",
+    "home_event_id": 999,
+    "gender_id": 1,
+    "email": "a.tolok@gmail.com",
+    "password": "Qwer1234",
+    "ice_name": "Tanja",
+    "ice_contact": "+7 (903) 123-4567",
+    "parkrun_id": "A1039491",
+    "is_agreement": "on",
+    "telegram_id": 121232394324
+}
+
+###
+
+POST http://{{host}}/v1/register
+Accept: application/json
+Content-Type: application/json
+
+{
+  "first_name": "Тест",
+  "last_name": "Тестов",
+  "birthday": "01.01.1970",
+  "home_event_id": 999,
+  "gender_id": 1,
+  "email": "qqq@qqq.ru",
+  "password": "Test1234",
+  "ice_name": "Кто-то",
+  "ice_contact": "Где-то",
+  "is_agreement": "on",
+  "parkrun_id": "A12345"
+}
+
+###
+
+POST http://{{host}}/v1/auth/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "A1039491",
+  "password": "Qwer1234!@#$"
+}
+
+###
+
+POST http://{{host}}/v1/event/listByVerstId
+Accept: application/json
+Content-Type: application/json
+Authorization: chumbawamba
+
+{}
+
+###
+
+POST http://{{host}}/v1/event/create
+Accept: application/json
+Content-Type: application/json
+Authorization: chumbawamba
+
+{
+  "event": {
+    "name": "qwe",
+    "url": "qwe",
+    "city_id": 1
+  }
+}
+
+###
+
+POST http://{{host}}/v1/volunteer/role/list
+Accept: application/json
+Content-Type: application/json
+
+{}
+
+###
+
+GET http://{{host}}/v1/e/790001019/f3f8529c494cafef65f796b80043b06c8a678c2a9887608fcecf93f2a0488d36
+
+###
+
+POST http://{{host}}/v1/results/getByDateAndEventId
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "date": "11.6.2022",
+    "event_id": 2593
+}
+
+###
+
+POST http://{{host}}/v1/athlete/getListByIdPart
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "id": 79005724
+}
+
+###
+
+POST http://{{host}}/v1/athlete/getListByNamePart
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "name": "аверк",
+    "registered_only": true,
+    "event_id": 999
+}
+
+###
+
+POST http://{{host}}/v1/volunteer/event/save
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "event_id": 999,
+    "date": "20.08.2022",
+    "upload_status_id": 2,
+    "volunteers": [
+        {
+            "verst_id": {{tolok_id}},
+            "role_id": 1
+        }
+    ]
+}
+
+###
+
+POST http://{{host}}/v1/volunteer/event/clear
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "event_id": 999,
+    "event_date": "24.09.2022"
+}
+
+###
+
+POST http://{{host}}/v1/volunteer/event/save
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "event_id": 999,
+    "date": "05.07.2022",
+    "status_id": 2,
+    "volunteers": [
+        {
+            "verst_id": {{tolok_id}},
+            "role_id": 1
+        },
+        {
+            "verst_id": 790055924,
+            "role_id": 2
+        }
+    ]
+}
+
+###
+
+POST http://{{host}}/v1/volunteer/event/save
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "event_id": 999,
+    "date": "05.07.2022",
+    "status_id": 2,
+    "volunteers": [
+        {
+            "verst_id": {{tolok_id}},
+            "role_id": 1
+        }
+    ]
+}
+
+###
+
+POST http://{{host}}/v1/website/event/history
+Accept: application/json
+Content-Type: application/json
+
+{
+    "url": "mitino"
+}
+
+###
+
+POST http://{{host}}/v1/website/event/getByUrl
+Accept: application/json
+Content-Type: application/json
+
+{
+  "url": "mitino"
+}
+
+###
+
+POST http://{{host}}/v1/website/athlete/statById
+Accept: application/json
+Content-Type: application/json
+
+{
+  "id": 790092939,
+  "volunteer_list_type": "full"
+}
+
+
+curl -X POST -H "Content-Type: application/json" http://127.0.0.1:3010/v1/website/athlete/statById
+###
+
+POST http://{{host}}/v1/website/volunteers/getByUrl
+Accept: application/json
+Content-Type: application/json
+
+{
+    "date": "27.08.2022",
+    "url": "mitino"
+}
+
+###
+
+POST http://{{host}}/v1/website/volunteers/getByUrl
+Accept: application/json
+Content-Type: application/json
+
+{
+  "url": "mitino"
+}
+
+###
+
+POST http://{{host}}/v1/event/volunteer/list
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "event_id": 999,
+    "event_date": "11.06.2022"
+}
+
+###
+
+POST http://{{host}}/v1/website/athlete/remind
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="email"
+
+a.tolok@gmail.co
+--boundary--
+
+###
+
+POST http://{{host}}/v1/website/athlete/remind
+Content-Type: application/json
+
+{
+    "email": "Shell84@bk.ru"
+}
+
+###
+
+POST http://{{host}}/v1/telegram/link
+Content-Type: application/json
+X-Auth-Token: pUrkRuNFaRevA
+
+{
+    "verst_id": 790001000,
+    "telegram_id": 121233434
+}
+
+###
+
+POST http://{{host}}/v1/telegram/athlete/get
+Content-Type: application/json
+X-Auth-Token: pUrkRuNFaRevA
+
+{
+    "telegram_id": 121233434
+}
+
+###
+
+POST http://{{host}}/v1/telegram/athlete/getById
+Content-Type: application/json
+X-Auth-Token: pUrkRuNFaRevA
+
+{
+    "verst_id": 790055578
+}
+
+###
+
+POST http://{{host}}/v1/athlete/unconfirm
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "verst_id": {{tolok_id}}
+}
+
+###
+
+POST http://{{host}}/v1/results/send
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "event_id": 999,
+    "event_date": "05.06.2022"
+}
+
+###
+
+POST http://{{host}}/v1/volunteer/event/send
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "event_id": 999,
+    "event_date": "05.06.2022"
+}
+
+###
+
+POST http://{{host}}/v1/website/volunteers/roster
+Content-Type: application/json
+
+{
+    "url": "mitino",
+    "num_days": 4
+}
+
+###
+
+POST http://{{host}}/v1/tools/email/registration
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "verst_id": {{tolok_id}}
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/getById
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "id": {{tolok_id}}
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/getById
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "id": 790098952
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/getListByNamePart
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "name": "tolok"
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/remindMany
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "emails": [
+    "kiraruderman@gmail.com",
+    "tbystro@yandex.ru"
+  ]
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/getByEmail
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "email": "Tbystro@yandex.ru"
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/event/grant
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "verst_id": 790114337,
+  "event_id": 999
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/profile/gender/update
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "verst_id": {{tolok_id}},
+  "gender": "m"
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/profile/email/update
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "verst_id": {{tolok_id}},
+  "email": "a.tolok@gmail.com"
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/profile/name/update
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "verst_id": {{tolok_id}},
+  "first_name": "Alex1",
+  "last_name": "Tolok1"
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/profile/birthday/update
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "verst_id": {{tolok_id}},
+  "birthday": "06.09.1974"
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/event/revoke
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "verst_id": 790114337,
+  "event_id": 999
+}
+
+###
+
+POST http://{{host}}/v1/support/athlete/event/grant/list
+Content-Type: application/json
+X-Auth-Token: Mzg4PnWmigXjh4gzTgFEgffPeekBmPzdbshj9FpH6e7VTdXxYEQ2dd
+
+{
+  "verst_id": 790114337
+}
+
+###
+
+POST http://{{host}}/v1/website/event/stat
+Content-Type: application/json
+
+{
+  "url": null
+}
+
+###
+
+POST http://{{host}}/v1/website/event/history/last
+Content-Type: application/json
+
+{}
+
+###
+
+POST http://{{host}}/v1/account/login
+Content-Type: application/json
+
+{
+    "username": "A1039491",
+    "password": "Qwer1234!@#$"
+}
+
+###
+
+POST https://nrms-dev.5verst.ru/api/v1/account/login
+Content-Type: application/json
+
+{
+  "username": "A1039491",
+  "password": "Qwer1234!@#$"
+}
+
+###
+
+POST http://{{host}}/v1/account/athlete/get
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{}
+
+###
+
+POST http://{{host}}/v1/account/athlete/update
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+    "first_name": "Alexander",
+    "last_name": "Papand",
+    "home_event_id": 999,
+    "ice_name": "Tanja",
+    "ice_contact": "+7 (903) 123-4567"
+}
+
+###
+
+POST http://{{host}}/v1/account/password/change/init
+Content-Type: application/json
+
+{
+  "email": "A.tOloK@gMaiL.coM"
+}
+
+###
+
+POST http://{{host}}/v1/account/password/change/submit
+Content-Type: application/json
+
+{
+  "password": "newPassword",
+  "hash": "fb7adf94fc98c77d08f06355157b5155a26668c4e4e10e3d9ecdec0076ddf91d"
+}
+
+###
+
+POST http://{{host}}/v1/account/event/list
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{}
+
+###
+
+POST http://{{host}}/v1/account/athlete/qrcode
+Authorization: Bearer chumbawamba
+
+{}
+
+###
+
+POST http://{{host}}/v1/forever/event/list/options
+Content-Type: application/json
+
+{
+  "group_by": "subject"
+}
+
+###
+
+POST http://{{host}}/v1/telegram/unlink
+Content-Type: application/json
+X-Auth-Token: pUrkRuNFaRevA
+
+{
+  "verst_id": 790001000,
+  "telegram_id": 121233434
+}
+
+###
+
+GET http://{{host}}/v1/shop/qrcode?verst_id=790109296&type=triple
+Content-Type: application/json
+Authorization: Bearer Yirq9zPP08CXpIk8qoXR3uUD
+
+###
+
+GET http://{{host}}/v1/shop/qrcode?verst_id=790109295&type=normal
+Content-Type: application/json
+Authorization: Bearer Yirq9zPP08CXpIk8qoXR3uUD
+
+###
+
+GET http://{{host}}/v1/shop/qrcode?verst_id=790109296&type=white
+Content-Type: application/json
+Authorization: Bearer Yirq9zPP08CXpIk8qoXR3uUD
+
+###
+
+GET http://{{host}}/v1/shop/athlete/get?verst_id={{tolok_id}}
+Content-Type: application/json
+Authorization: Bearer Yirq9zPP08CXpIk8qoXR3uUD
+
+###
+
+GET http://{{host}}/v1/shop/athlete/get?verst_id=790113871
+Content-Type: application/json
+Authorization: Bearer Yirq9zPP08CXpIk8qoXR3uUD
+
+###
+
+POST http://{{host}}/v1/event/cancel
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "event_id": 999,
+  "event_date": "03.09.2022",
+  "reason": "отменен просто так"
+}
+
+###
+
+POST http://{{host}}/v1/event/status/get
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "event_id": 999,
+  "date": "13.08.2022"
+}
+
+###
+
+POST http://{{host}}/v1/event/restore
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "event_id": 999,
+  "event_date": "13.08.2022"
+}
+
+###
+
+POST http://{{host}}/v1/account/athlete/password/update
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "old_password": "jkhjkldkfdas",
+  "new_password": "dkjfnldlkdnfs"
+}
+
+###
+
+POST http://{{host}}/v1/website/event/status
+Content-Type: application/json
+
+{
+  "url": "mitino",
+  "date": "03.09.2022"
+}
+
+###
+
+POST http://{{host}}/v1/athlete/contact/get
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "verst_id": 790109296
+}
+
+###
+
+POST http://{{host}}/v1/athlete/volunteer/summary
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "verst_id": 790057244
+}
+
+###
+
+POST http://{{host}}/v1/calendar/add
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "event_id": 999,
+  "event_date": "06.01.2023",
+  "hour": 8,
+  "minute": 30
+}
+
+###
+
+POST http://{{host}}/v1/calendar/update
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "event_id": 999,
+  "event_date": "06.01.2023",
+  "hour": 9,
+  "minute": 30
+}
+
+###
+
+POST http://{{host}}/v1/calendar/delete
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "event_id": 999,
+  "event_date": "06.01.2023"
+}
+
+###
+
+POST http://{{host}}/v1/calendar/event/list
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "event_id": 999,
+  "year": 2023
+}
+
+###
+
+POST http://{{host}}/v1/calendar/list
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "year": 2023
+}
+
+###
+
+POST http://{{host}}/v1/website/calendar/event/list
+Content-Type: application/json
+
+{
+  "url": "mitino",
+  "year": 2023
+}
+
+###
+
+POST http://{{host}}/v1/website/calendar/list
+Content-Type: application/json
+
+{
+  "year": 2023
+}
+
+###
+
+POST http://{{host}}/v1/event/get
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "event_id": 999
+}
+
+###
+
+POST http://{{host}}/v1/event/save
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "event": {
+    "id": 999,
+    "name": "Митино",
+    "url": "mitino",
+    "lat": 55.839559,
+    "lon": 37.367644,
+    "address": "Mitino",
+    "course_description": "Трасса проходит в два разных круга по живописному Митинскому ландшафтному парку",
+    "city_id": 46,
+    "name_genitive": "в Митино",
+    "parking_lat": null,
+    "parking_lon": null,
+    "dog_allowed": true,
+    "surface_type_id": 1,
+    "start_time_description": "старт в 9:00",
+    "course_map_url": null,
+    "meeting_point_description": "Мы собираемся в парке у входа напротив ул.Барышиха, д.2",
+    "facility": null,
+    "by_foot": "Необходимо выйти из метро «Митино» (последний вагон из центра, из стеклянных дверей направо), после стеклянных дверей повернуть налево и идти прямо по улице Митинская до пересечения с улицей Барышиха. На ней повернуть направо и пройти 200 метров — точка старта располагается сразу за входом в парк напротив домов №4 и №6. Путь от метро «Митино» пешком займёт примерно 7 минут. От метро «Волоколамская» до места старта можно дойти пешком по дорожкам в парке за 10 минут. Нужно выйти из первого вагона (если вы следуете из центра), на выходе из метро повернуть налево и идти по дорожке прямо до пруда. Возле него нужно повернуть направо и идти вдоль воды до точки старта.",
+    "by_transport": "На метро: Митинский парк находится недалеко от станции метро «Митино». Последний вагон из центра, из стеклянных дверей направо, затем налево и прямо по улице Митинская до улицы Барышиха. На ней свернуть направо — до входа в парк будет 200 метров. Кроме того, прямо в парке находится станция метро «Волоколамская», от которой можно дойти по парку до места старта или добежать трусцой за 10-15 минут. На автобусе: маршрут № 210, следующий от метро «Тушинская» и от ж/д платформы Рижского направления, останавливается прямо напротив входа в парк (остановка «Улица Барышиха, дом 2«).",
+    "by_auto": "Официальный адрес ландшафтного парка «Митино» — ул. Пенягинская, д. 16. Вход, возле которого находится зона старта/финиша, находится на улице Барышиха возле дома №4. На машине из центра можно добраться по Волоколамскому шоссе (после Митинского радиорынка свернуть на улицу Барышиха) или по МКАД (свернуть на Новотушинский проезд). Ближайшая к старту парковка расположена на улице Барышиха прямо перед входом в парк. Парковка небольшая, но в случае нехватки мест на улице Барышиха возле входа в парк есть возможность припарковать машину в «кармане» на обочине.",
+    "vk_url": null,
+    "telegram_url": null
+  }
+}
+
+###
+
+POST http://{{host}}/v1/dict/city/list
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{}
+
+###
+
+POST http://{{host}}/v1/dict/surface-type/list
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{}
+
+###
+
+POST http://{{host}}/v1/event/save HTTP/1.1
+Authorization: Bearer chumbawamba
+Content-Type: multipart/form-data; boundary=--------------------------888822563986101793743508
+
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="name"
+
+Кукушкино
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="url"
+
+kukushkino
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="lat"
+
+48.48
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="lon"
+
+9.10
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="course_description"
+
+Описание трассы
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="city_id"
+
+9
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="name_genitive"
+
+Кукушкина
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="surface_type_id"
+
+1
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="meeting_point_description"
+
+Встречаемся у камня за старым кладбищем
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="by_foot"
+
+Хоть страшно, а идти надо
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="by_transport"
+
+Трамвай как черт рогатый
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="by_auto"
+
+Крепче за шоферку держись, баран
+----------------------------888822563986101793743508--
+
+###
+
+POST http://{{host}}/v1/event/save HTTP/1.1
+Authorization: Bearer chumbawamba
+Content-Type: multipart/form-data; boundary=--------------------------888822563986101793743508
+
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="file"; filename="rollingstones.png"
+Content-Type: image/png
+
+< rollingstones.png
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="name"
+
+Кукушкино
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="url"
+
+kukushkino
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="lat"
+
+48.48
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="lon"
+
+9.10
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="course_description"
+
+Описание трассы
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="city_id"
+
+9
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="name_genitive"
+
+Кукушкина
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="surface_type_id"
+
+1
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="meeting_point_description"
+
+Встречаемся у камня за старым кладбищем
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="by_foot"
+
+Хоть страшно, а идти надо
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="by_transport"
+
+Трамвай как черт рогатый
+----------------------------888822563986101793743508
+Content-Disposition: form-data; name="by_auto"
+
+Крепче за шоферку держись, баран
+----------------------------888822563986101793743508--
+
+###
+
+POST http://{{host}}/v1/event/list HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{}
+
+###
+
+POST http://{{host}}/v1/website/milestone/member/list HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{
+  "milestone_club_code": "vol50"
+}
+
+###
+
+POST http://{{host}}/v1/website/event/features HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{}
+
+###
+
+POST http://{{host}}/v1/website/stat/report/tourists HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer chumbawamba
+
+{}

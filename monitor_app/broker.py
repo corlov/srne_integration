@@ -1,6 +1,9 @@
 import paho.mqtt.client as mqtt
 import logging
 import utils as u
+import time
+import json
+import glb_consts as glb
 
 MQTT_SERVER_ADDR = "192.168.1.199"
 MQTT_PORT = 1883
@@ -27,10 +30,17 @@ def connectMqtt():
 
 
 
+
 def publish(topic_name, message_text):
     client = connectMqtt()
     if client.is_connected:
-        result = client.publish(topic_name, message_text)
+        message = json.loads(message_text)
+        message['serialNumber'] = glb.DEVICE_SERIAL_NUMBER
+        message['MAC'] = u.get_mac_addr()
+        message['deviceId'] = glb.DEVICE_ID
+        message['ts'] = time.time()
+
+        result = client.publish(topic_name, json.dumps(message))
         status = result[0]
         if status != 0:
             u.logmsg(f"Failed to send message to topic {topic_name}")

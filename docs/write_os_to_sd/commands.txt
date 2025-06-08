@@ -1,11 +1,17 @@
-
+После того как с оф.сайа скачан подходящий образ дистрибутива Линукса (обычно это Ubuntu)
+вставить сд-карту и отмонтировать ее:
  
 lsblk
 sudo umount /dev/mmcblk0p1
 
 sudo fdisk -l
 
+
+Распаковать образ из архива:
 # arm64_ubuntu_22.04.5_desktop_18.04.25_ver-1.4-passive.zip
+
+
+Затем записать образ распакованый на карту:
 sudo dd if=/home/kostya/work/OREL/linux_images/repka-os-3.img of=/dev/mmcblk0 bs=1M status=progress status=progress iflag=direct oflag=direct
 
 

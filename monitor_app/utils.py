@@ -1,5 +1,6 @@
 
 import logging
+import uuid
 
 logging.basicConfig(level=logging.DEBUG, filename='solar_monitor.log', filemode='a', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -39,3 +40,10 @@ def modbus_crc(data: bytes) -> int:
                 crc >>= 1
     
     return crc
+
+
+def get_mac_addr():
+    mac_address = uuid.getnode()  # Returns MAC as 48-bit integer
+    formatted_mac = ':'.join(['{:02x}'.format((mac_address >> elements) & 0xff) for elements in range(0,8*6,8)][::-1])
+    return formatted_mac
+
