@@ -10,6 +10,28 @@ import data_prepare as dp
 import inmemory as im
 
 
+
+def clean_db():
+    try:
+        conn = psycopg2.connect(**glb.PG_CONNECT_PARAMS)
+        cursor = conn.cursor()
+
+        cursor.execute("delete from device.dynamic_information where created_at < NOW() - INTERVAL '14 days'")
+        conn.commit()
+        cursor.execute("delete from device.system_information where created_at < NOW() - INTERVAL '14 days'")
+        conn.commit()
+        cursor.execute("delete from device.command_history where created_at < NOW() - INTERVAL '14 days'")
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+
+        u.logmsg('[OK]  clean')
+    except Exception as e:
+        u.logmsg(f"load_history_to_redis, Error occurred: {str(e)}", u.L_ERROR)        
+
+
+
 def load_history_to_redis():
     try:
         conn = psycopg2.connect(**glb.PG_CONNECT_PARAMS)

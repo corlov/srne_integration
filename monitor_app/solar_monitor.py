@@ -25,7 +25,18 @@ modbus = None
 def init():
     if not os.path.exists(glb.LOG_PATH):
         os.makedirs(glb.LOG_PATH)    
-    logging.basicConfig(filename=os.path.join(glb.LOG_PATH, glb.MAIN_LOG_FILE), force=True, level=logging.DEBUG, filemode='a', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    log_file = os.path.join(glb.LOG_PATH, glb.MAIN_LOG_FILE)
+    if os.path.exists(log_file):
+        size_limit = 1024*1024*30  # 30Mb
+        file_size = os.path.getsize(log_file)
+        if file_size > size_limit:
+            try:
+                os.remove(log_file)
+            except:
+                print(f"cant remove the log file")
+    
+    logging.basicConfig(filename=log_file, force=True, level=logging.DEBUG, filemode='a', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     
 
     glb.DEVICE_ID = int(os.getenv('DEVICE_ID', 2))
@@ -124,7 +135,9 @@ def run():
     global modbus
 
     db.load_history_to_redis()
+    db.clean_db()
 
+    cleanup_counter = 0
     t = 0
     first_loop = True
     while True:
@@ -145,6 +158,12 @@ def run():
             
         time.sleep(glb.DELAY_BETWEEN_COMMANDS)
         t += glb.DELAY_BETWEEN_COMMANDS
+        
+        cleanup_counter += 1
+        if cleanup_counter > glb.CLEANUP_LIMIT:
+            db.clean_db()
+            cleanup_counter = 0
+
 
         # чтобы сделать таймаут проверки наличия команд и таймаут считывания состояния независимыми величинами
         if t >= glb.DELAY_BETWEEN_REQUESTS or first_loop:

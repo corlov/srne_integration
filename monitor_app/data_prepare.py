@@ -39,6 +39,7 @@ def dynamic_info_jsonfy(response, error):
                 count += 1
 
         nested_dict = {
+            "ts": time.time(),
             "modbusError": error,
             "controller": {
                 "chargingMode": glb.chargeModes[response.registers[32]-loadOffset],
@@ -334,6 +335,7 @@ def read_controller_settings(modbus):
         reg = read_register(modbus, sr.addr_specialPowerControl)
 
         settings = {
+            "ts": time.time(),
             'common': [
                 {'boostchargingRecoveryVoltage': read_register(modbus, sr.addr_boostchargingRecoveryVoltage), 'unit': glb.UNIT_VOLT },
                 {'overDischargeRecoveryVoltage': read_register(modbus, sr.addr_overDischargeRecoveryVoltage), 'unit': glb.UNIT_VOLT },
