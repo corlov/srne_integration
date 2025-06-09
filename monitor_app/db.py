@@ -1,4 +1,3 @@
-import traceback
 import time
 import json
 from datetime import datetime
@@ -27,18 +26,14 @@ def load_history_to_redis():
 
         r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
         for row in rows:
-            #print('history' + str(glb.DEVICE_ID) + '_' + str(row[0]))
             r.set(im.RK_HISTORY + str(glb.DEVICE_ID) + '_' + str(row[0]), json.dumps(row[1]))
 
+        cursor.close()
+        conn.close()
+
+        u.logmsg('[OK]  load_history_to_redis')
     except Exception as e:
-        print(f"load_history_to_redis, Error occurred: {type(e).__name__}: {e}")
-        print("Line number:", traceback.extract_tb(e.__traceback__)[-1].lineno)
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-    u.logmsg('[OK]  load_history_to_redis')
+        u.logmsg(f"load_history_to_redis, Error occurred: {str(e)}", u.L_ERROR)        
 
 
 
@@ -46,7 +41,7 @@ def load_history_to_redis():
 def store_cmd(command):
     new_id = 0
     try:
-        print(command)
+        u.logmsg(command)
         conn = psycopg2.connect(**glb.PG_CONNECT_PARAMS)
         cursor = conn.cursor()
         insert_query = """

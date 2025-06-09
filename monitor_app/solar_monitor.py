@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import os
-import traceback
 import atexit
 import time
 import json
@@ -130,7 +129,13 @@ def run():
     first_loop = True
     while True:
         command_str = sc.get_external_command()
-        if command_str:
+        if command_str is None:
+            time.sleep(glb.DELAY_BETWEEN_COMMANDS)
+            if modbus:
+                if modbus.connect():
+                    modbus.close()
+            continue
+        elif command_str:
             command = json.loads(command_str)
             id = db.store_cmd(command)
             if id:
@@ -154,7 +159,6 @@ def run():
                 else:
                     u.logmsg(f"Failed to connect to Modbus server INIT '{glb.DEVICE_SYS_ADDR}'")
             except Exception as e:
-                print(e)
                 u.logmsg(e)
 
 

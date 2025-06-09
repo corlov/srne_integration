@@ -17,7 +17,7 @@ L_ERROR = 4
 L_CRITICAL = 5
 
 
-def logmsg(msg, level=L_INFO):
+def logmsg(msg, level=L_INFO, arg=None):
     print(msg)
 
     if level == L_DEBUG:

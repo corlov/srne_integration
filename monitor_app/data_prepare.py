@@ -1,4 +1,3 @@
-import traceback
 import time
 import json
 import redis
@@ -92,13 +91,20 @@ def read_dynamic_payload(modbus):
     response = modbus.read_holding_registers(address=sr.addr_dynamic_info_registers_start_addr, count=35, slave=glb.DEVICE_ID)
     payload = dynamic_info_jsonfy(response, False)
 
-    # последнюю информацию писать в кеш
-    r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
-    r.set(im.RK_TELEMETRY + str(glb.DEVICE_ID), payload)
+    try:
+        # последнюю информацию писать в кеш
+        r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+        r.set(im.RK_TELEMETRY + str(glb.DEVICE_ID), payload)
+    except Exception as e:
+        u.logmsg(f"read_dynamic_payload, An error occurred: {e}", u.L_ERROR)
+        return
+
 
     if glb.PUBLISH_BROKER_ENABLED:
         br.publish(br.TOPIC_TELEMETRY, payload)
 
+    cursor = None
+    conn = None
     try:
         conn = psycopg2.connect(**glb.PG_CONNECT_PARAMS)
         cursor = conn.cursor()
@@ -109,13 +115,11 @@ def read_dynamic_payload(modbus):
         cursor.execute(insert_query, (payload,))
         conn.commit()
         u.logmsg('[OK]  read_dynamic_payload')
+        cursor.close()
+        conn.close()
     except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        u.logmsg(f"An error occurred: {e}", u.L_ERROR)
+    
 
 
 
@@ -174,22 +178,26 @@ def read_history(modbus):
 
         if updated:
             db.load_history_to_redis()
-    except Exception as e:
-        #print(f"An error occurred: {e}")
-        print(f"Error occurred: {type(e).__name__}: {e}")
-        print("Line number:", traceback.extract_tb(e.__traceback__)[-1].lineno)
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        
+        cursor.close()
+        conn.close()
+        u.logmsg('[OK]  read_history')
 
-    u.logmsg('[OK]  read_history')
+    except Exception as e:
+        u.logmsg(f"Error occurred: {e}", u.L_ERROR)
+
+
 
 
 
 def read_system_information(modbus):    
-    r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+    r = None
+    try:
+        r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+    except Exception as e:
+        u.logmsg(f"read_system_information, An error occurred: {e}", u.L_ERROR)
+        return
+
     if not r.exists(im.RK_SYS_INFO + str(glb.DEVICE_ID)):
         response = modbus.read_holding_registers(address=sr.addr_retedChargingCurrent, count=1, slave=glb.DEVICE_ID)
         maxSupportVoltage = response.registers[0] >> 8 
@@ -256,18 +264,15 @@ def read_system_information(modbus):
                 VALUES (%s,%s);
             """
             cursor.execute(insert_query, (sys_info_text, glb.DEVICE_ID,))
-            conn.commit()            
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+            u.logmsg('system_information updated')
         except Exception as e:
-            #print(f"An error occurred: {e}")
-            print(f"Error occurred: {type(e).__name__}: {e}")
-            print("Line number:", traceback.extract_tb(e.__traceback__)[-1].lineno)
-        finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
-        u.logmsg('system_information updated')
-    
+            u.logmsg(f"read_system_information, Rrror occurred: {e}", u.L_ERROR)
+
+
     if glb.DEVICE_SERIAL_NUMBER == '':
         sys_info = json.loads(r.get(im.RK_SYS_INFO + str(glb.DEVICE_ID)))
         for item in sys_info:
@@ -311,8 +316,12 @@ def read_controller_settings(modbus):
     # # Temperature compensation factor
     # print(read_register(modbus, 0xE014))
 
-    
-    r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+    r = None
+    try:
+        r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+    except Exception as e:
+        u.logmsg(f"read_controller_settings, An error occurred: {e}", u.L_ERROR)
+        return
 
     need_to_update = False
     if not r.exists(im.RK_SETTINGS + str(glb.DEVICE_ID)):
@@ -379,17 +388,12 @@ def read_controller_settings(modbus):
                 VALUES (%s,%s);
             """
             cursor.execute(insert_query, (settings_text, glb.DEVICE_ID,))
-            conn.commit()            
-        except Exception as e:        
-            print(f"Error occurred: {type(e).__name__}: {e}")
-            print("Line number:", traceback.extract_tb(e.__traceback__)[-1].lineno)
-        finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
-    u.logmsg('[OK]  read_controller_settings')
+            conn.commit()
+            cursor.close()
+            conn.close()
 
-
+            u.logmsg('[OK]  read_controller_settings')
+        except Exception as e:
+            u.logmsg(f"Error occurred: {e}", u.L_ERROR)
 
 
