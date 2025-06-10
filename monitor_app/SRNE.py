@@ -37,3 +37,6 @@ addr_boostchargingVoltage = 0xE008
 addr_floatingChargingVoltage = 0xE009
 addr_lightControlDelay = 0xE01E
 addr_lightControlVoltage = 0xE01F
+
+addr_loadOnOff = 0x010A
+addr_chargeCurrent = 0xE001

@@ -16,6 +16,7 @@ import data_prepare as dp
 import db
 import SRNE as srne
 import send_commands as sc
+import inmemory as im
 
 
 modbus = None
@@ -96,7 +97,7 @@ def exec_command(cmd):
         case "control_load_on_off":
             on_off = int(cmd['value'])
             if 0 == on_off or 1 == on_off:
-                return sc.send2device(0x010A, on_off)
+                return sc.send2device(srne.addr_loadOnOff, on_off)
             else:
                 return False, "Unknown mode"
         
@@ -109,7 +110,7 @@ def exec_command(cmd):
         case "set_load_working_mode":
             mode = int(cmd['value'])
             if mode >= 0x00 and mode <= 0x11:
-                return sc.send2device(0xE01D, mode)
+                return sc.send2device(srne.addr_loadWorkingMode, mode)
             else:
                 return False, "Unknown mode"
 
@@ -122,7 +123,7 @@ def exec_command(cmd):
             current_amp = float(cmd['value'])
             if current_amp >= 0.01 and current_amp < 30:
                 current_amp = int(current_amp * 100)
-                return sc.send2device(0xE001, current_amp)
+                return sc.send2device(srne.addr_chargeCurrent, current_amp)
             else:
                 return False, "Incorrect current value was passed"
 
@@ -155,6 +156,7 @@ def run():
                 status, err_text = exec_command(command)
                 u.logmsg(f"status: {status}, error: {err_text}")
                 db.store_cmd_status(id, status, err_text)
+                im.store_command_response(id, command['uuid'], status, err_text)
             
         time.sleep(glb.DELAY_BETWEEN_COMMANDS)
         t += glb.DELAY_BETWEEN_COMMANDS
