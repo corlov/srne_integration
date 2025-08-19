@@ -1,0 +1,60 @@
+#lightSwitch {
+	transform: scale(1.8);
+}
+
+.custom-card-dark {
+	background-color: var(--bs-gray-800) !important;
+	border-color: #575a5d !important;
+}
+
+.custom-card-light {
+	background-color: var(--bs-gray-100) !important;
+	border-color: #c2c4c6 !important;
+}
+
+.custom-theme.bg-light {
+  background-color: darkslategray !important;
+  border-radius: 3px;
+  color: gainsboro;
+  text-decoration: underline;
+}
+
+.custom-theme.bg-dark {
+  background-color: blanchedalmond !important;
+  box-shadow: 10px 5px 5px rgba(246, 255, 219, 0.5);
+  color: dimgray;
+  text-decoration: overline;
+}
+
+
+
+.percentage-width {
+  width: 50%; /* 50% of the parent width */
+  background-color: lightgreen;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+
+.button-container {
+  display: flex;
+  justify-content: flex-end; /* Выравнивание кнопки вправо */
+  padding: 20px; /* Отступы вокруг контейнера */
+}
+
+.fixed-button {
+  width: 150px; /* Фиксированная ширина кнопки */
+  height: 50px; /* Фиксированная высота кнопки */
+  background-color: #4CAF50; /* Цвет фона кнопки */
+  color: white; /* Цвет текста кнопки */
+  border: none; /* Убираем границу */
+  border-radius: 5px; /* Закругленные углы */
+  cursor: pointer; /* Курсор при наведении */
+  font-size: 16px; /* Размер шрифта */
+  padding: 10px;
+  margin: 10px;
+}
+
+.fixed-button:hover {
+  background-color: #45a049; /* Цвет фона при наведении */
+}
