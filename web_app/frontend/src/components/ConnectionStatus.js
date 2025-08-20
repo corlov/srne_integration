@@ -1,8 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
-import { logout } from './actions/Auth';
+import React from 'react';
 import './styles/Login.css';
 import './styles/custom.css';
 

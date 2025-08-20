@@ -1,20 +1,26 @@
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
+import jwt
 import datetime
 import time
 import redis
 import json
-from datetime import datetime
 import uuid
 import os
+import bcrypt
 
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
-SECRET_KEY = 'your_secret_key'  # Change this to a strong secret key
+CORS(app)
+SECRET_KEY = 'uw3cok92adxmzpf35_secret_key_value_12082025'
 
-# In-memory user storage
-users = []  
+# TODO: загрузить из хранилища информацию о пользователях
+users = [
+        # 123
+        {'username': 'user', 'hashed_password': b'$2b$12$VsKwKBwbwZF3.pdBVUAjZu4/h1IAVxIWltoY5ccxtkyU2vxq9xIn.'},
+        # 12345
+        {'username': 'admin', 'hashed_password': b'$2b$12$1iUzgD74nAmOJS49OFdjqeUqNcnRYy/qHjuIPAPZUCeQILz1Z56S6'},
+]  
 
 
 REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
@@ -47,17 +53,69 @@ def dynamic_data_get():
 
 
 
-@app.route('/dynamic_data_events')
-def events():
+@app.route('/settings', methods=['GET'])
+def settings():
+    token = request.headers.get('Authorization')
+        
+    if not token:
+        return jsonify(message='Token is missing!')
+
+    try:
+        data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        print("Hello, ", data['username'])
+        
+        device_id = request.args.get('deviceId')
+        return redis_read(RK_SETTINGS, device_id)    
+    except jwt.ExpiredSignatureError:
+        return jsonify(message='Token has expired!')
+    except jwt.InvalidTokenError:
+        return jsonify(message='Invalid token!')
+            
+    
+
+
+
+@app.route('/dynamic_data_events/<device_id>')
+def events(device_id):
     def generate_events():
         while True:
             print('event')
-            data_dict = redis_read(RK_TELEMETRY, 2)
+            data_dict = redis_read(RK_TELEMETRY, device_id)
             yield f"data: {json.dumps(data_dict)}\n\n"
             time.sleep(5)
             
-    return Response(generate_events(), content_type='text/event-stream')
+    #token = request.headers.get('Authorization')
+    token = request.args.get('Authorization')
+    
+    if not token:
+        return jsonify(message='Token is missing!')
 
+    try:
+        data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        print("Hello, ", data['username'])
+        return Response(generate_events(), content_type='text/event-stream')
+    except jwt.ExpiredSignatureError:
+        return jsonify(message='Token has expired!')
+    except jwt.InvalidTokenError:
+        return jsonify(message='Invalid token!')
+            
+    #return Response(generate_events(), content_type='text/event-stream')
+
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    print(data)
+    username = data['username']
+    password = data['password'].encode('utf-8')
+
+    user = next((u for u in users if u['username'] == username), None)
+
+    if user and bcrypt.checkpw(password, user['hashed_password']):
+       token = jwt.encode({'username': username, 'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=30)}, SECRET_KEY)
+       return jsonify(token=token)
+    return jsonify(message='Invalid credentials')
 
 
 if __name__ == '__main__':

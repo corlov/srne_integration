@@ -5,47 +5,18 @@ import { useDispatch } from 'react-redux';
 import { logout } from './actions/Auth';
 import ContorllerStatus from './ControllerStatus';
 import ConnectionStatus from './ConnectionStatus';
+import Settings from './Settings';
 import './styles/Login.css';
 import './styles/custom.css';
 
-
+const deviceId = 2
 
 const ComplexStatus = () => {
     const dispatch = useDispatch();
     const authData = useSelector((state) => state.auth);
-
     const [data, setData] = useState(null);
     const [error, setError] = useState('error');
-
-    const fetchData = async () => {
-        try {
-        
-          // http://192.168.1.193:8080/v1/dynamic_data?deviceId=2
-          // http://localhost:5000/get_actual_data
-          //const response = await axios.post('http://192.168.1.193:8080/v1/dynamic_data?deviceId=2', { });
-          console.log('before GET')
-          const response = await axios.get('http://localhost:5000/dynamic_data');
-          console.log(response)
-          if (response) {
-            //alert('Logged in token = ' + response.data.token)
-            console.log(response.data)
-            setData(response.data)
-            setError('')
-          }
-
-        } catch (err) {
-          setError(err.message);
-        }
-      };
-
-      useEffect(() => {
-        fetchData();
-        const intervalId = setInterval(fetchData, 2000);
-        return () => {
-          clearInterval(intervalId);
-        };
-      }, []);
-
+    const [deviceSettings, setSettings] = useState(null)
 
     useEffect(() => {
         const link = document.createElement('link');
@@ -58,44 +29,51 @@ const ComplexStatus = () => {
           document.head.removeChild(link);
         };
       }, []);
-   
-    // const renderCardItem = (label, id, value) => (
-    //     <div className="card-title">
-    //       <h6>
-    //         {label}:
-    //         <span id={id} className="badge bg-secondary text-light" style={{ float: 'right', marginTop: '-0.5px', marginLeft: '0.25rem' }}>
-    //           {value}
-    //         </span>
-    //       </h6>
-    //       <hr style={{ marginTop: '-4px', marginBottom: '-4px' }} />
-    //     </div>
-    //   );
+
 
     const logoutUser = async () => {
         dispatch(logout());
     };
 
-
-    const [time, setTime] = useState('');
+    // SSE подписка на события об изменении состояния устройства
     useEffect(() => {
-        const eventSource = new EventSource('http://localhost:5000/events');
-
+        const eventSourceUrl = new URL(`http://192.168.1.193:5011/dynamic_data_events/${deviceId}`);
+        eventSourceUrl.searchParams.append('Authorization', authData.token);
+        const eventSource = new EventSource(eventSourceUrl.toString());
+        
         eventSource.onmessage = (event) => {
-            setTime(event.data);
+            const recvData = JSON.parse(event.data);
+            setData(recvData)
+            setError('')
         };
 
-        // Clean up the event source on component unmount
         return () => {
             eventSource.close();
         };
+    }, [authData.token]);
+
+    const fetchsettingsData = async () => {
+      try {
+        const response = await axios.get(`http://192.168.1.193:5011/settings?deviceId=${deviceId}`, {headers: { Authorization: authData.token }});
+        if (response) {
+          setSettings(response.data)
+        }
+
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
+    useEffect(() => {
+      fetchsettingsData();
     }, []);
 
     return (
         <div className="container">
             <div>
                 <div className="button-container">
-                Пользователь: {authData.username}
-                <button className="fixed-button" onClick={logoutUser}>Выход</button>
+                  Пользователь: {authData.username}
+                  <button className="fixed-button" onClick={logoutUser}>Выход</button>
                 </div>
             </div>
 
@@ -104,16 +82,21 @@ const ComplexStatus = () => {
                   <ContorllerStatus width='50%' error={error} data={data}/>
                   <ConnectionStatus width='49%' error={error} data={data}/>
                 </>
-              ) : (
-                <ContorllerStatus width='99%' error={error} data={data}/>
-              )
-            }
+            ) : null}
 
-            <div>
-                <p>Current Time: {time}</p>
-            </div>
+            {authData.username === 'user' ? (
+                <>
+                  <ContorllerStatus width='50%' error={error} data={data}/>
+                  <Settings width='49%' error={error} data={deviceSettings}/>
+                </>
+            ) : null}
         </div>
   );
 };
 
 export default ComplexStatus;
+
+
+
+
+    
