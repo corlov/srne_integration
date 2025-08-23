@@ -25,7 +25,7 @@ const Login = () => {
 
     return (
         <div className="container">
-            <h1>Авторизация</h1>
+            <h2>РТК локальная консоль управления</h2>
             <div className="form-group">
                 <label htmlFor="email">Пользователь</label>
                 <input

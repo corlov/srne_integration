@@ -1,0 +1,198 @@
+:root{
+    --header-height: 20px;
+    --sidebar-width: 260px;
+    --bg-sidebar: #fafafa;
+    --border: #e6e6e6;
+    --accent: #2563eb;
+    --text: #111827;
+    --muted: #6b7280;
+  }
+
+  .app-logo {
+    width: 40px;
+    height: 47px;
+    flex: 0 0 36px; /* фиксировать размер в flex-контейнере */
+    object-fit: cover; /* сохраняет пропорции, обрезая при необходимости */
+    border-radius: 6px;
+  }
+
+
+  .user-name {
+    color: var(--muted);
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  
+  /* чтобы кнопка не увеличивала высоту и была выровнена */
+  .logout-btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: #309c0f;
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+  }
+
+
+  /* Заголовок занимает доступное пространство, но обрезается при нехватке места */
+.app-title{
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Правая часть: имя и кнопка в одном ряду и по центру */
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0; /* не ужимать блок вправо */
+  }
+
+  /* Левая часть: логотип + заголовок в одном ряду, вертикально центрированы */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0; /* чтобы текст мог сокращаться */
+  }
+  
+  /* Структура */
+  .tabs-root {
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    font-family: Inter, Roboto, Arial, sans-serif;
+  }
+  
+  /* Фиксированная шапка */
+  .app-header{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-height);
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;     /* по вертикали центр */
+    justify-content: space-between;
+    padding: 0 16px;
+    box-sizing: border-box;
+    z-index: 60;
+    gap: 12px;
+    
+  }
+  
+  
+  .app-title{
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  
+  /* Контейнер для sidebar + content (под шапкой) */
+  .tabs-container{
+    position: absolute;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+  }
+  
+  /* Фиксированный сайдбар (учитывает шапку) */
+  .tabs-sidebar{
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    padding: 16px;
+    box-sizing: border-box;
+    z-index: 50;
+    overflow: auto;
+  }
+  
+  /* Контент справа, скролл только внутри */
+  .tabs-content{
+    position: absolute;
+    top: var(--header-height);
+    left: var(--sidebar-width);
+    right: 0;
+    bottom: 0;
+    padding: 5px;
+    box-sizing: border-box;
+    overflow: auto;
+    background: #fff;
+  }
+  
+  /* Стили списка вкладок */
+  .tabs-sidebar ul{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .tab{
+    display: block;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    color: var(--text);
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background .12s, color .12s;
+    font-size: 14px;
+  }
+  
+  .tab:hover{
+    background: #f2f4f7;
+  }
+  
+  .tab.active{
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  
+  /* Внутренние заголовки контента не будут под шапкой */
+  .tabs-content > * {
+    padding-top: 4px;
+  }
+  
+  /* Адаптив: на узких экранах превратить в верхнее меню */
+  @media (max-width: 720px) {
+    :root { --sidebar-width: 100%; }
+  
+    .tabs-sidebar{
+      position: relative;
+      top: 0;
+      width: 100%;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+  
+    .tabs-content{
+      position: relative;
+      top: 0;
+      left: 0;
+      padding-top: 12px;
+    }
+  
+    .app-header{ height: 56px; }
+  }

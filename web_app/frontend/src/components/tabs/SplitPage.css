@@ -1,0 +1,138 @@
+:root{
+    --gap: 20px;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --card-shadow: 0 6px 18px rgba(16,24,40,0.08);
+    --radius: 10px;
+    --text: #0f172a;
+    --muted: #6b7280;
+    --max-width: 1200px;
+  }
+  
+  /* Корень: центрирование и отступы */
+  .split-root{
+    display: flex;
+    gap: var(--gap);
+    padding: 24px;
+    box-sizing: border-box;
+    background: var(--bg);
+    min-height: calc(100vh - 48px);
+    align-items: start;
+    justify-content: center;
+  }
+  
+  /* ограничитель ширины контента */
+  .split-root::before{
+    content: "";
+    display: block;
+    width: 0;
+  }
+  
+  /* Левая колонка */
+  .left-col{
+    flex: 0 0 360px; /* фиксированная ширина колонки */
+    max-width: 40%;
+  }
+  
+  /* Таблица без границ */
+  .params-table{
+    width: 100%;
+    border-collapse: collapse;
+    background: transparent;
+  }
+  
+  .params-row{
+    height: 44px;
+  }
+  
+  .param-name{
+    padding: 8px 12px;
+    color: var(--muted);
+    font-size: 14px;
+    width: 60%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .param-value{
+    padding: 8px 12px;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 14px;
+    text-align: left;
+  }
+  
+  /* Правая колонка: занимает оставшееся место, карточки вертикально */
+  .right-col{
+    flex: 1 1 auto;
+    max-width: var(--max-width);
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+  }
+  
+  /* Карточки */
+  /* .card{
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    padding: 16px;
+    box-sizing: border-box;
+    display: block;
+  }
+  
+  .card-title{
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: var(--text);
+  } */
+
+  /* Карточки: скруглённый прямоугольник с рамкой и мягкой тенью */
+.card{
+    background: var(--card-bg);
+    border-radius: 12px;                 /* скругление углов */
+    border: 1px solid rgba(15,23,42,0.48); /* лёгкая граница */
+    box-shadow: 0 4px 12px rgba(16,24,40,0.36); /* мягкая тень */
+    padding: 16px;
+    box-sizing: border-box;
+    display: block;
+  }
+  
+  /* чуть более выраженный заголовок внутри карты */
+  .card-title{
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: var(--text);
+  }  
+  
+  .card-body{
+    color: var(--muted);
+    font-size: 14px;
+  }
+  
+  /* Адаптив: на маленьких экранах стекируем колонки */
+  @media (max-width: 900px){
+    .split-root{
+      flex-direction: column;
+      padding: 16px;
+    }
+  
+    .left-col{
+      flex: none;
+      width: 100%;
+      max-width: 100%;
+      order: 2; /* при необходимости показать правую часть первой */
+    }
+  
+    .right-col{
+      order: 1;
+      width: 100%;
+    }
+  }
+  
+  /* Мелкие улучшения: читаемость таблицы */
+  .params-row:nth-child(odd) .param-name,
+  .params-row:nth-child(odd) .param-value{
+    background: transparent;
+  }

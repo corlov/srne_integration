@@ -9,6 +9,9 @@ import Settings from './Settings';
 import './styles/Login.css';
 import './styles/custom.css';
 
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import TabsPage from "./TabsPage";
+
 const deviceId = 2
 
 const ComplexStatus = () => {
@@ -68,30 +71,42 @@ const ComplexStatus = () => {
       fetchsettingsData();
     }, []);
 
-    return (
-        <div className="container">
-            <div>
-                <div className="button-container">
-                  Пользователь: {authData.username}
-                  <button className="fixed-button" onClick={logoutUser}>Выход</button>
-                </div>
-            </div>
+    // return (
+    //     <div className="container">
+    //         <div>
+    //             <div className="button-container">
+    //               Пользователь: {authData.username}
+    //               <button className="fixed-button" onClick={logoutUser}>Выход</button>
+    //             </div>
+    //         </div>
 
-            {authData.username === 'admin' ? (
-                <>
-                  <ContorllerStatus width='50%' error={error} data={data}/>
-                  <ConnectionStatus width='49%' error={error} data={data}/>
-                </>
-            ) : null}
+    //         {authData.username === 'admin' ? (
+    //             <>
+    //               <ContorllerStatus width='50%' error={error} data={data}/>
+    //               <ConnectionStatus width='49%' error={error} data={data}/>
+    //             </>
+    //         ) : null}
 
-            {authData.username === 'user' ? (
-                <>
-                  <ContorllerStatus width='50%' error={error} data={data}/>
-                  <Settings width='49%' error={error} data={deviceSettings}/>
-                </>
-            ) : null}
-        </div>
-  );
+    //         {authData.username === 'user' ? (
+    //             <>
+    //               <ContorllerStatus width='50%' error={error} data={data}/>
+    //               <Settings width='49%' error={error} data={deviceSettings}/>
+    //             </>
+    //         ) : null}
+    //     </div>
+    //  );
+
+
+     return (
+        <BrowserRouter>
+        <Routes>
+        <Route path="/*" element={<TabsPage error={error} data={data}/>} />
+        {/* можно добавить другие маршруты приложения */}
+        </Routes>
+    </BrowserRouter>
+    );
+
+  
 };
 
 export default ComplexStatus;
