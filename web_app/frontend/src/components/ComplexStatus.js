@@ -8,11 +8,12 @@ import ConnectionStatus from './ConnectionStatus';
 import Settings from './Settings';
 import './styles/Login.css';
 import './styles/custom.css';
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import TabsPage from "./TabsPage";
+import { backendEndpoint } from '../global_consts/Backend'
 
 const deviceId = 2
+
 
 const ComplexStatus = () => {
     const dispatch = useDispatch();
@@ -20,6 +21,8 @@ const ComplexStatus = () => {
     const [data, setData] = useState(null);
     const [error, setError] = useState('error');
     const [deviceSettings, setSettings] = useState(null)
+    const [deviceSystemInfo, setSystemInfo] = useState(null)
+    const [complexInfo, setComplexInfo] = useState(null)
 
     useEffect(() => {
         const link = document.createElement('link');
@@ -40,7 +43,7 @@ const ComplexStatus = () => {
 
     // SSE подписка на события об изменении состояния устройства
     useEffect(() => {
-        const eventSourceUrl = new URL(`http://192.168.1.193:5011/dynamic_data_events/${deviceId}`);
+        const eventSourceUrl = new URL(`${backendEndpoint}/dynamic_data_events/${deviceId}`);
         eventSourceUrl.searchParams.append('Authorization', authData.token);
         const eventSource = new EventSource(eventSourceUrl.toString());
         
@@ -55,58 +58,55 @@ const ComplexStatus = () => {
         };
     }, [authData.token]);
 
-    const fetchsettingsData = async () => {
+
+    const fetchDataFromBackend = async (pointName, callback) => {
       try {
-        const response = await axios.get(`http://192.168.1.193:5011/settings?deviceId=${deviceId}`, {headers: { Authorization: authData.token }});
+        const response = await axios.get(`${backendEndpoint}/${pointName}`, {headers: { Authorization: authData.token }});
         if (response) {
-          setSettings(response.data)
+          callback(response.data)
         }
 
       } catch (err) {
+        console.log(err.message)
         setError(err.message);
       }
     };
 
+    const fetchComplexInfo = async () => {
+      fetchDataFromBackend('complex_settings', setComplexInfo)
+    };
+
+    const fetchSettingsData = async () => {
+      fetchDataFromBackend(`settings?deviceId=${deviceId}`, setSettings)
+    };
+
+
+    const fetchSystemData = async () => {
+      fetchDataFromBackend(`system_info?deviceId=${deviceId}`, setSystemInfo)
+    };
+
     useEffect(() => {
-      fetchsettingsData();
+      fetchSettingsData();
+      fetchSystemData();
+      fetchComplexInfo();
     }, []);
 
-    // return (
-    //     <div className="container">
-    //         <div>
-    //             <div className="button-container">
-    //               Пользователь: {authData.username}
-    //               <button className="fixed-button" onClick={logoutUser}>Выход</button>
-    //             </div>
-    //         </div>
-
-    //         {authData.username === 'admin' ? (
-    //             <>
-    //               <ContorllerStatus width='50%' error={error} data={data}/>
-    //               <ConnectionStatus width='49%' error={error} data={data}/>
-    //             </>
-    //         ) : null}
-
-    //         {authData.username === 'user' ? (
-    //             <>
-    //               <ContorllerStatus width='50%' error={error} data={data}/>
-    //               <Settings width='49%' error={error} data={deviceSettings}/>
-    //             </>
-    //         ) : null}
-    //     </div>
-    //  );
-
-
-     return (
+    return (
+      <>
+      {error ? <>Запустите backend!</> :
         <BrowserRouter>
-        <Routes>
-        <Route path="/*" element={<TabsPage error={error} data={data}/>} />
-        {/* можно добавить другие маршруты приложения */}
-        </Routes>
-    </BrowserRouter>
+          <Routes>
+            <Route path="/*" element={<TabsPage error={error} 
+                                                deviceDynamicData={data} 
+                                                deviceSettings={deviceSettings} 
+                                                deviceSystemInfo={deviceSystemInfo} 
+                                                complexInfo={complexInfo}
+                                                logoutUser={logoutUser}/>} />
+          </Routes>
+        </BrowserRouter>
+      }
+      </>
     );
-
-  
 };
 
 export default ComplexStatus;

@@ -1,0 +1,1 @@
+export const backendEndpoint = 'http://192.168.1.193:5011'

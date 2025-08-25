@@ -1,0 +1,38 @@
+.key-value-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;    
+    margin: 0 auto;
+  }
+  
+  .key-value-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1px 0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .key-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+    min-width: 120px;
+  }
+  
+  .value-highlight {
+    padding: 8px 16px;
+    border-radius: 20px; /* Rounded rectangle */
+    font-weight: 500;
+    font-size: 14px;
+    color: #1976d2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-width: 80px;
+    text-align: center;
+  }
+  
+  /* Optional: Add hover effect */
+  .value-highlight:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }

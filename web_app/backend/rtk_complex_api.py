@@ -8,6 +8,9 @@ import json
 import uuid
 import os
 import bcrypt
+import psycopg2
+from psycopg2 import sql
+
 
 
 app = Flask(__name__)
@@ -52,7 +55,34 @@ def dynamic_data_get():
     return redis_read(RK_TELEMETRY, device_id)
 
 
+@app.route('/system_info', methods=['GET'])
+def system_info():
+    token = request.headers.get('Authorization')
+        
+    if not token:
+        return jsonify(message='Token is missing!')
 
+    try:
+        data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        print("Hello, ", data['username'])
+        
+        device_id = request.args.get('deviceId')
+
+        sys_list = redis_read(RK_SYS_INFO, device_id)
+        res_hash = {}
+        for s in sys_list:
+            for key, value in s.items():
+                if key != 'unit':
+                    res_hash[key] = value
+        print(res_hash)
+        return res_hash
+    except jwt.ExpiredSignatureError:
+        return jsonify(message='Token has expired!')
+    except jwt.InvalidTokenError:
+        return jsonify(message='Invalid token!')
+
+
+# настройки контроллера СП
 @app.route('/settings', methods=['GET'])
 def settings():
     token = request.headers.get('Authorization')
@@ -71,7 +101,38 @@ def settings():
     except jwt.InvalidTokenError:
         return jsonify(message='Invalid token!')
             
+
+# настройки всего комплекса
+@app.route('/complex_settings', methods=['GET'])
+def complex_settings():
+    # FIXME: в настройки пароли убрать
+    connection_params = {
+        'host': 'localhost',
+        'database': 'solar_controller_telemetry',
+        'user': 'postgres',
+        'password': 'gen_postgress_password',
+        'port': '5432'
+    }
+
+    try:
+        conn = psycopg2.connect(**connection_params)
+        cursor = conn.cursor()
+        query = sql.SQL("SELECT param, value FROM solar_controller_telemetry.device.complex_settings")        
+        cursor.execute(query)        
+        rows = cursor.fetchall()
+        result_dict = {key: value for key, value in rows}
+        
+        return result_dict
+
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
     
+    return {}
 
 
 

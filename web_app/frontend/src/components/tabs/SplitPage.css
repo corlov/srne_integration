@@ -42,25 +42,40 @@
   }
   
   .params-row{
-    height: 44px;
+    height: 14px;
   }
   
   .param-name{
-    padding: 8px 12px;
+    padding: 2px 3px;
     color: var(--muted);
     font-size: 14px;
     width: 60%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-width: 80px;
+    background-color: #a1c6e2;
   }
   
   .param-value{
-    padding: 8px 12px;
+    padding: 4px 12px;
     color: var(--text);
     font-weight: 600;
     font-size: 14px;
     text-align: left;
+    
+    /* border-radius: 20px; Rounded rectangle */
+    font-weight: 500;
+    font-size: 14px;
+    color: #062646;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-width: 80px;
+    text-align: right;
+    background-color: #a1c6e2;
+    
   }
   
   /* Правая колонка: занимает оставшееся место, карточки вертикально */

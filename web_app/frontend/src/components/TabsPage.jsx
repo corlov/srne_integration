@@ -9,7 +9,7 @@ import SettingsTab from "./tabs/SettingsTab";
 import "./tabs/tabs.css";
 
 
-export default function TabsPage({error, data}) {
+export default function TabsPage({error, deviceDynamicData, deviceSettings, deviceSystemInfo, complexInfo, logoutUser}) {
     const dispatch = useDispatch();
     const authData = useSelector((state) => state.auth);
 
@@ -42,42 +42,66 @@ export default function TabsPage({error, data}) {
           
           <div className="header-right">
             [Пользователь: <b>{authData.username},</b> дата входа: {loginDatetime}]
-            <button className="logout-btn">Выход</button>
+            <button className="logout-btn" onClick={logoutUser}>Выход</button>
           </div>
         </header>
+
+     
   
         <div className="tabs-container">
           <aside className="tabs-sidebar" aria-label="Меню">
             <nav>
-              <ul>
-                <li>
-                  <NavLink to="state" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-                    Состояние
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="events" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-                    Журнал событий
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="params" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-                    Журнал параметров
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink to="settings" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-                    Настройки
-                  </NavLink>
-                </li>
-              </ul>
+              {authData.username === 'admin' ? (
+                <ul>                
+                  <li>
+                    <NavLink to="state" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+                      Состояние
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to="events" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+                      Журнал событий
+                    </NavLink>
+                  </li>
+                </ul>
+              ) : null}
+
+              {authData.username === 'user' ? (
+                <ul>                
+                  <li>
+                    <NavLink to="state" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+                      Состояние
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to="events" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+                      Журнал событий
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to="params" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+                      Журнал параметров
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to="settings" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+                      Настройки
+                    </NavLink>
+                  </li>
+                </ul>
+              ) : null}
             </nav>
           </aside>
   
           <main className="tabs-content" role="main">
             <Routes>
               <Route path="/" element={<Navigate to="state" replace />} />
-              <Route path="state" element={<StateTab error={error} data={data}/>} />
+              <Route path="state" element={<StateTab 
+                  error={error} 
+                  deviceDynamicData={deviceDynamicData} 
+                  deviceSettings={deviceSettings} 
+                  deviceSystemInfo={deviceSystemInfo} 
+                  complexInfo={complexInfo}/>} />
               <Route path="events" element={<EventsLogTab />} />
               <Route path="params" element={<ParamsLogTab />} />
               <Route path="settings" element={<SettingsTab />} />
