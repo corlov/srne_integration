@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { backendEndpoint } from '../../global_consts/Backend'
-import '../styles/Table.css'
+import '../../assets/styles/Table.css'
 import "../../assets/styles/ItemsTable.css"
 
 const ParamsLogTab = () => {

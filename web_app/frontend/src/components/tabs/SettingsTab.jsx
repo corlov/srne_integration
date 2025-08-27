@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { backendEndpoint } from '../../global_consts/Backend'
-import Field from '../Field'
+import Field from './Field'
 
 
 

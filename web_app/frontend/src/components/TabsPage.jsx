@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { NavLink, Routes, Route, Navigate } from "react-router-dom";
@@ -6,7 +6,7 @@ import StateTab from "./tabs/StateTab";
 import EventsLogTab from "./tabs/EventsLogTab";
 import ParamsLogTab from "./tabs/ParamsLogTab";
 import SettingsTab from "./tabs/SettingsTab";
-import "./tabs/tabs.css";
+import "../assets/styles/tabs.css";
 
 
 export default function TabsPage({error, deviceDynamicData, deviceSettings, deviceSystemInfo, complexInfo, logoutUser}) {

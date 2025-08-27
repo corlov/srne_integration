@@ -2,13 +2,10 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
-import { logout } from './actions/Auth';
-import ContorllerStatus from './ControllerStatus';
-import ConnectionStatus from './ConnectionStatus';
-import Settings from './Settings';
-import './styles/Login.css';
-import './styles/custom.css';
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { logout } from '../redux/actions/Auth';
+import '../assets/styles/Login.css';
+import '../assets/styles/custom.css';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import TabsPage from "./TabsPage";
 import { backendEndpoint } from '../global_consts/Backend'
 
@@ -24,6 +21,7 @@ const ComplexStatus = () => {
     const [deviceSystemInfo, setSystemInfo] = useState(null)
     const [complexInfo, setComplexInfo] = useState(null)
 
+    // FIXME: убрать внешнюю зависимость
     useEffect(() => {
         const link = document.createElement('link');
         link.rel = 'stylesheet';

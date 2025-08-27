@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { login } from './actions/Auth';
+import { login } from '../redux/actions/Auth';
 import { backendEndpoint } from '../global_consts/Backend'
 import axios from 'axios';
-import './styles/Login.css';
+import '../assets/styles/Login.css';
 
 const Login = () => {
     const [username, setUsername] = useState('');

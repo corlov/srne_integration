@@ -1,6 +1,6 @@
 import React from "react";
-import "./SplitPage.css";
-import "./styles/KeyValuePairs.css";
+import "../../assets/styles/SplitPage.css";
+import "../../assets/styles/KeyValuePairs.css";
 import { useMemo } from 'react';
 
 
