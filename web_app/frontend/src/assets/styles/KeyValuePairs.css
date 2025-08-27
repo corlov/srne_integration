@@ -36,3 +36,20 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
+
+
+
+.alarm-text {
+    color: red;
+    font-weight: bold;
+}
+
+.green-text {
+  color: rgb(23, 236, 23);
+  font-weight: bold;
+}
+
+.unknown-status {
+    color: orange;
+    font-style: italic;
+}

@@ -13,7 +13,7 @@ function RightCard({ title, children }) {
   );
 }
 
-export default function StateTab({error, deviceDynamicData, deviceSettings, deviceSystemInfo, complexInfo}) {
+export default function StateTab({error, deviceDynamicData, gpioData, deviceSettings, deviceSystemInfo, complexInfo}) {
 
   const deviceDynamicDataTime = useMemo(() => {
       if (!deviceDynamicData || !deviceDynamicData.ts) {
@@ -85,21 +85,21 @@ export default function StateTab({error, deviceDynamicData, deviceSettings, devi
   ];
 
   const KeyValuePairs = ({ data, highlightColor = '#e3f2fd' }) => {
-      return (
-        <div className="key-value-container">
-          {Object.entries(data).map(([key, value]) => (
-            <div key={key} className="key-value-row">
-              <span className="key-label">{key}:</span>
-              <span 
-                className="value-highlight"
-                style={{ backgroundColor: highlightColor }}
-              >
-                {value}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
+    return (
+      <div className="key-value-container">
+        {Object.entries(data).map(([key, value]) => (
+          <div key={key} className="key-value-row">
+            <span className="key-label">{key}:</span>
+            <span 
+              className="value-highlight"
+              style={{ backgroundColor: highlightColor }}
+            >
+              {value}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const complexInfoDict = {
@@ -112,16 +112,37 @@ export default function StateTab({error, deviceDynamicData, deviceSettings, devi
   };
 
 
+
+  function getDoorStatus(openDoorAlarm) {
+    if (openDoorAlarm == null) {
+      return <span className="unknown-status">неизвестно</span>;
+    }
+    
+    return openDoorAlarm ? 
+      <span className="alarm-text">открыта</span> : 
+      <span className="green-text">закрыта</span>;
+  }
+
+  function getKeyStatus(key) {
+    if (key == null) {
+      return <span className="unknown-status">неизвестно</span>;
+    }
+    
+    return key ? 
+      <span>вкл.</span> : 
+      <span>откл.</span>;
+  }
+
   // TODO: это заглушки
   const complexState = {
-    'WiFi':  'вкл.',
-    'Дверь шкафа': 'открыта',
-    'Режим работы светильника': 'выкл.',
-    'Режим работы светофора': 'режим 1 (500мс, 1Гц)',
-    'Ключ К2 (светофор)': 'откл.',
-    'Ключ К3 (лампа)': 'вкл.',
-    'Ключ К4 (модем)': 'откл.',
-  };
+    'WiFi': 'вкл.',
+    'Дверь шкафа': getDoorStatus(gpioData?.open_door_alarm),
+    'Режим работы светильника': complexInfo.load_work_mode,
+    'Режим работы светофора': complexInfo.trafficlight_work_mode,
+    'Ключ К2 (светофор)': getKeyStatus(gpioData.k2),
+    'Ключ К3 (лампа)': getKeyStatus(gpioData.k3),
+    'Ключ К4 (модем)': getKeyStatus(gpioData.k4),
+};
 
   return (
       <div className="split-root">

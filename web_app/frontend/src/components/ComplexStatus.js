@@ -16,6 +16,7 @@ const ComplexStatus = () => {
     const dispatch = useDispatch();
     const authData = useSelector((state) => state.auth);
     const [data, setData] = useState(null);
+    const [gpioData, setGpioData] = useState(null);
     const [error, setError] = useState('error');
     const [deviceSettings, setSettings] = useState(null)
     const [deviceSystemInfo, setSystemInfo] = useState(null)
@@ -57,6 +58,22 @@ const ComplexStatus = () => {
     }, [authData.token]);
 
 
+    useEffect(() => {
+      const eventSourceUrl = new URL(`${backendEndpoint}/gpio_state`);
+      eventSourceUrl.searchParams.append('Authorization', authData.token);
+      const eventSource = new EventSource(eventSourceUrl.toString());
+      
+      eventSource.onmessage = (event) => {
+          const recvData = JSON.parse(event.data);
+          setGpioData(recvData)
+      };
+
+      return () => {
+          eventSource.close();
+      };
+  }, [authData.token]);
+
+
     const fetchDataFromBackend = async (pointName, callback) => {
       try {
         const response = await axios.get(`${backendEndpoint}/${pointName}`, {headers: { Authorization: authData.token }});
@@ -83,6 +100,7 @@ const ComplexStatus = () => {
       fetchDataFromBackend(`system_info?deviceId=${deviceId}`, setSystemInfo)
     };
 
+
     useEffect(() => {
       fetchSettingsData();
       fetchSystemData();
@@ -95,7 +113,8 @@ const ComplexStatus = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/*" element={<TabsPage error={error} 
-                                                deviceDynamicData={data} 
+                                                deviceDynamicData={data}
+                                                gpioData={gpioData}
                                                 deviceSettings={deviceSettings} 
                                                 deviceSystemInfo={deviceSystemInfo} 
                                                 complexInfo={complexInfo}

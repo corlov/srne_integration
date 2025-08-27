@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" version="28.1.1" pages="4">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36" version="28.1.1" pages="5">
   <diagram name="Вкладка Главная" id="GFUAhkRL49dfXiXTIOH3">
     <mxGraphModel dx="2211" dy="1933" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -441,6 +441,65 @@
         </mxCell>
         <mxCell id="s5kPf92sKEHeZknNZxj--16" value="Список выбора работы режима: режим (1) / режим (2)&amp;nbsp;/ режим (3)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="5ThG6XobZ2ruwxqq5RCI-1">
           <mxGeometry x="-37.5" y="400" width="435" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="CY70Pbk909OsNIJfqBpY" name="Страница — 5">
+    <mxGraphModel dx="1384" dy="764" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-1" value="" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="114" y="270" width="416" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-2" value="ИТС" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="130" y="280" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-3" value="данные со всех устройств" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" vertex="1" parent="1">
+          <mxGeometry x="140" y="480" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-4" value="брокер сообщений (прием данных)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="310" y="490" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-5" value="GUI" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="310" y="310" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-6" value="" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="700" y="260" width="390" height="410" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-7" value="АК" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="730" y="280" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-8" value="GUI" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="870" y="280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-9" value="backend" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="870" y="360" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-11" value="сервис общения с контроллером СП" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="510" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-12" value="REST API" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="340" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-13" value="отправка в брокер&lt;div&gt;телеметрии&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="430" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-14" value="сервис общения с БУ" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="730" y="585" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-15" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" vertex="1" parent="1">
+          <mxGeometry x="950" y="460" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-16" value="Redis" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="890" y="585" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Z5_FLo2LhxATG_R24rsV-18" value="" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="Z5_FLo2LhxATG_R24rsV-5" target="Z5_FLo2LhxATG_R24rsV-12">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="390" y="420" as="sourcePoint" />
+            <mxPoint x="440" y="370" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>

@@ -9,7 +9,7 @@ import SettingsTab from "./tabs/SettingsTab";
 import "../assets/styles/tabs.css";
 
 
-export default function TabsPage({error, deviceDynamicData, deviceSettings, deviceSystemInfo, complexInfo, logoutUser}) {
+export default function TabsPage({error, deviceDynamicData, gpioData, deviceSettings, deviceSystemInfo, complexInfo, logoutUser}) {
     const dispatch = useDispatch();
     const authData = useSelector((state) => state.auth);
 
@@ -98,7 +98,8 @@ export default function TabsPage({error, deviceDynamicData, deviceSettings, devi
               <Route path="/" element={<Navigate to="state" replace />} />
               <Route path="state" element={<StateTab 
                   error={error} 
-                  deviceDynamicData={deviceDynamicData} 
+                  deviceDynamicData={deviceDynamicData}
+                  gpioData={gpioData} 
                   deviceSettings={deviceSettings} 
                   deviceSystemInfo={deviceSystemInfo} 
                   complexInfo={complexInfo}/>} />
