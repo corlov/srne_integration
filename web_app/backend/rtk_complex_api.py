@@ -10,6 +10,7 @@ import os
 import bcrypt
 import psycopg2
 from psycopg2 import sql
+import psycopg2.extras
 
 
 
@@ -133,6 +134,160 @@ def complex_settings():
             conn.close()
     
     return {}
+
+
+def row_to_dict(row):
+    """Конвертирует строку из БД в словарь"""
+    if row is None:
+        return None
+    return {key: value for key, value in row.items()}
+
+
+def get_conn():
+    # FIXME: в настройки пароли убрать
+    connection_params = {
+        'host': 'localhost',
+        'database': 'solar_controller_telemetry',
+        'user': 'postgres',
+        'password': 'gen_postgress_password',
+        'port': '5432'
+    }
+
+    return psycopg2.connect(**connection_params)
+        
+@app.route('/params_log', methods=['GET'])
+def params_log():
+    # FIXME: в настройки пароли убрать
+    connection_params = {
+        'host': 'localhost',
+        'database': 'solar_controller_telemetry',
+        'user': 'postgres',
+        'password': 'gen_postgress_password',
+        'port': '5432'
+    }
+
+    # FIXME: non secure!
+    start_d = request.args.get("start_date")
+    end_d = request.args.get("end_date")
+    limit = request.args.get("limit", type=int)
+    
+    
+    print('2', limit, start_d, end_d)
+    
+    if not start_d:
+        start_d = datetime.datetime.now().strftime('%Y-%m-%d')
+
+    if not end_d:
+        end_d = datetime.datetime.now().strftime('%Y-%m-%d')
+
+    # Build timestamp strings
+    start_d = f"{start_d} 00:00:00"
+    end_d   = f"{end_d} 23:59:59"
+
+    
+    print('3', limit, start_d, end_d)
+    
+    try:
+        conn = psycopg2.connect(**connection_params)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            select
+	            to_char(created_at, 'YYYY-MM-DD HH24:MI:SS') as created_at,
+	            payload->'panels'->>'volts' as panel_volts,
+	            payload->'battery'->>'volts' as battery_volts,
+	            payload->'battery'->>'stateOfCharge' as battery_stateOfCharge,
+	            payload->'load'->>'amps' as load_amps,
+	            payload->'load'->>'dailyPower' as load_dailyPower,    
+	            payload->'controller'->>'chargingMode' as controller_chargingMode,
+	            payload->'load'->>'state' as load_state,
+	            payload->'controller'->>'temperature' as controller_temperature
+            from solar_controller_telemetry.device.dynamic_information di
+            where
+                created_at between %(start_d)s and %(end_d)s
+            order by created_at desc 
+            limit %(limit)s;
+        """, {"limit": limit, "start_d": start_d, "end_d": end_d})        
+        columns = [desc[0] for desc in cursor.description]
+        rows = cursor.fetchall()            
+        result = []
+        for row in rows:
+            item = {}
+            for i, column in enumerate(columns):
+                item[column] = row[i]
+            result.append(item)
+
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': result,
+            'total': len(result)
+        })
+
+
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+    
+    return {}
+
+
+
+@app.route("/api/settings", methods=["GET"])
+def list_settings():
+    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("select id, descr as name, value, type, options from device.complex_settings cs order by id")
+
+        rows = cur.fetchall()
+        # options stored as JSON in DB; psycopg2 will map to Python list/dict
+        return jsonify(rows)
+
+
+
+@app.route("/api/settings/<int:setting_id>", methods=["PUT"])
+def update_setting(setting_id):
+    data = request.get_json() or {}
+    if "value" not in data:
+        return abort(400, "Missing value")
+    new_value = data["value"]
+
+    # fetch setting for validation
+    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("SELECT id, descr as name, type, options FROM device.complex_settings WHERE id = %s", (setting_id,))
+        s = cur.fetchone()
+        if not s:
+            return abort(404)
+        t = s["type"]
+        opts = s.get("options")
+
+        # Simple validation/conversion
+        if t == "boolean":
+            if not isinstance(new_value, bool):
+                # allow strings 'true'/'false'
+                if isinstance(new_value, str) and new_value.lower() in ("true","false"):
+                    new_value = new_value.lower() == "true"
+                else:
+                    return abort(400, "Invalid boolean")
+            store_value = "true" if new_value else "false"
+        elif t == "select":
+            if opts is None:
+                return abort(500, "No options defined")
+            if new_value not in opts:
+                return abort(400, "Invalid option")
+            store_value = str(new_value)
+        else:  # string or default
+            store_value = str(new_value)
+
+        cur.execute("UPDATE device.complex_settings SET value = %s WHERE id = %s", (store_value, setting_id))
+        conn.commit()
+        return jsonify({"ok": True})
+
 
 
 

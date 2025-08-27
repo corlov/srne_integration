@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import './styles/Login.css';
-import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { login } from './actions/Auth';
 import { backendEndpoint } from '../global_consts/Backend'
-
+import axios from 'axios';
+import './styles/Login.css';
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -21,41 +20,49 @@ const Login = () => {
               dispatch(login({username: username, loginTimestamp: Math.floor(Date.now() / 1000), token: response.data.token}));
             }
             else {
-              alert('Failed login!')
+              setError('Введен неправильный пользователь или пароль')
             }       
         } catch (err) {
-            console.log('loginUser:', err.message)
-            setError(err)
+            setError(err.message)
         }
     };
 
+    const handleGoHome = () => {
+        window.location.href = '/';
+    };
+
     return (
-        <>
-        {error ? <>Запустите backend!</> :
-            <div className="container">
-                <h2>РТК локальная консоль управления</h2>
-                <div className="form-group">
-                    <label htmlFor="email">Пользователь</label>
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
+        <> {error ? (
+                <div>
+                    { (error == 'Network Error') ? (<p>Запустите backend!</p>) : <></>}
+                    <p>Текст ошибки: {error}</p>
+                    <button className="logout-btn" onClick={handleGoHome}>Назад</button>
                 </div>
-                <div className="form-group">
-                    <label htmlFor="password">Пароль</label>
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
+            ) :
+            (
+                <div className="container">
+                    <div className="form-group">
+                        <label htmlFor="email">Пользователь</label>
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="password">Пароль</label>
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </div>
+                    <button onClick={loginUser}>Войти</button>
                 </div>
-                <button onClick={loginUser}>Войти</button>
-            </div>
-        }
-        </>
+            )
+        }</>
     );
 };
 

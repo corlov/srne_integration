@@ -1,0 +1,98 @@
+.field-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr 72px;
+    column-gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  
+  .field-grid__label {
+    font-size: 14px;
+    color: #222;
+    padding-right: 6px;
+  }
+  
+  .field-grid__label-inline {}
+  
+  /* Input cell */
+  .field-grid__inputCell {
+    width: 100%;
+    max-width: 560px;
+  }
+  
+  /* Inputs */
+  .field-input,
+  .field-select {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  
+  /* Checkbox */
+  .field-checkboxLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #222;
+  }
+  .field-checkbox {
+    width: 18px;
+    height: 18px;
+  }
+  
+  /* Button cell: align items to start (left) so button sits at left edge of this column */
+  .field-grid__btnCell {
+    display: flex;
+    justify-content: flex-start; /* left edge */
+  }
+  
+  /* Save button: rectangular with check mark */
+  .field-saveBtn {
+    width: 48px;           /* фиксированная ширина */
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: #1976d2;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    padding: 0;
+    line-height: 1;
+    font-size: 18px;
+  }
+  .field-saveBtn.is-saving,
+  .field-saveBtn[disabled] {
+    background: #999;
+    cursor: default;
+  }
+  
+  /* Responsive */
+  @media (max-width: 640px) {
+    .field-grid {
+      grid-template-columns: 1fr 72px;
+    }
+    .field-grid__label {
+      display: block;
+      grid-column: 1 / -1;
+      margin-bottom: 6px;
+    }
+    .field-grid__label-inline {
+      display: none;
+    }
+    .field-grid__inputCell {
+      grid-column: 1 / 2;
+    }
+    .field-grid__btnCell {
+      grid-column: 2 / 3;
+    }
+  }
+  

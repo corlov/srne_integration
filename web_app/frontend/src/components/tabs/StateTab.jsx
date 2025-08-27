@@ -39,7 +39,7 @@ export default function StateTab({error, deviceDynamicData, deviceSettings, devi
     
     
   const params = [
-    { name: "Напряжение панели (В)", value: deviceDynamicData.panels.volts },
+    { name: "Напряжение СП (В)", value: deviceDynamicData.panels.volts },
     { name: "Напряжение АКБ (В)", value: deviceDynamicData.battery.volts },
     { name: "Уровень заряда АКБ (%)", value: deviceDynamicData.battery.stateOfCharge },
     { name: "Ток светильника (А)",value: deviceDynamicData.load.amps },
@@ -54,7 +54,6 @@ export default function StateTab({error, deviceDynamicData, deviceSettings, devi
   const additionalParams = [
     { name: "Ошибка в соединении по Modbus", value: (deviceDynamicData.modbusError ? 'есть' : 'нет') },
     { name: "Ток на СП (А)", value: deviceDynamicData.panels.amps },
-    { name: "Напряжение на СП (В)", value: deviceDynamicData.panels.volts },
 
     { name: "The current day of battery discharging amp-hrs", value: deviceDynamicData.load.dailyAmpHours },
     { name: "Макс.ток разрядки за сегодня (А)", value: deviceDynamicData.load.maxAmps },
@@ -107,7 +106,7 @@ export default function StateTab({error, deviceDynamicData, deviceSettings, devi
     'Версия ПО комплекса':  complexInfo.version,
     'Версия контроллера СП': deviceSystemInfo.hardwareVersion,
     'Серийный номер СП': deviceSystemInfo.serialNumber,
-    'Частота записы в журнал параметров работы (сек.)': complexInfo.params_log_timeout,
+    'Частота записы в журнал параметров работы (сек.)': complexInfo.params_log_period,
     'Коорддинаты местоположения': complexInfo.coordinates,
     'Тип АКБ': complexInfo.battery_type
   };
