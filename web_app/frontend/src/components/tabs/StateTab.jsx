@@ -13,10 +13,10 @@ function RightCard({ title, children }) {
   );
 }
 
-export default function StateTab({error, deviceDynamicData, gpioData, deviceSettings, deviceSystemInfo, complexInfo}) {
+export default function StateTab({error, deviceDynamicData, wifiStatus, gpioData, deviceSettings, deviceSystemInfo, complexInfo}) {
 
   const deviceDynamicDataTime = useMemo(() => {
-      if (!deviceDynamicData || !deviceDynamicData.ts) {
+      if (!deviceDynamicData || !deviceDynamicData.ts || !wifiStatus) {
           return "Нет данных";
       }
 
@@ -135,7 +135,8 @@ export default function StateTab({error, deviceDynamicData, gpioData, deviceSett
 
   // TODO: это заглушки
   const complexState = {
-    'WiFi': 'вкл.',
+    'WiFi': wifiStatus.mode,
+    'WiFi ошибка': `${wifiStatus.error_text} (${wifiStatus.error_details})`,
     'Дверь шкафа': getDoorStatus(gpioData?.open_door_alarm),
     'Режим работы светильника': complexInfo.load_work_mode,
     'Режим работы светофора': complexInfo.trafficlight_work_mode,

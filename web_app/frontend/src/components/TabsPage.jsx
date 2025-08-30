@@ -9,7 +9,18 @@ import SettingsTab from "./tabs/SettingsTab";
 import "../assets/styles/tabs.css";
 
 
-export default function TabsPage({error, deviceDynamicData, gpioData, deviceSettings, deviceSystemInfo, complexInfo, logoutUser}) {
+export default function TabsPage({
+  error, 
+  deviceDynamicData, 
+  wifiStatus, 
+  gpioData, 
+  deviceSettings, 
+  deviceSystemInfo, 
+  complexInfo, 
+  logoutUser, 
+  wifiOnHandler, 
+  wifiOffHandler
+}) {
     const dispatch = useDispatch();
     const authData = useSelector((state) => state.auth);
 
@@ -41,6 +52,9 @@ export default function TabsPage({error, deviceDynamicData, gpioData, deviceSett
   
           
           <div className="header-right">
+            WiFi:
+            <button className="logout-btn" onClick={wifiOnHandler}>On</button>
+            <button className="logout-btn" onClick={wifiOffHandler}>Off</button>
             [Пользователь: <b>{authData.username},</b> дата входа: {loginDatetime}]
             <button className="logout-btn" onClick={logoutUser}>Выход</button>
           </div>
@@ -99,6 +113,7 @@ export default function TabsPage({error, deviceDynamicData, gpioData, deviceSett
               <Route path="state" element={<StateTab 
                   error={error} 
                   deviceDynamicData={deviceDynamicData}
+                  wifiStatus={wifiStatus}
                   gpioData={gpioData} 
                   deviceSettings={deviceSettings} 
                   deviceSystemInfo={deviceSystemInfo} 

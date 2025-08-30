@@ -17,6 +17,7 @@ const ComplexStatus = () => {
     const authData = useSelector((state) => state.auth);
     const [data, setData] = useState(null);
     const [gpioData, setGpioData] = useState(null);
+    const [wifiStatus, setWifiStatus] = useState(null);
     const [error, setError] = useState('error');
     const [deviceSettings, setSettings] = useState(null)
     const [deviceSystemInfo, setSystemInfo] = useState(null)
@@ -40,6 +41,14 @@ const ComplexStatus = () => {
         dispatch(logout());
     };
 
+    const wifiOnHandler = async () => {
+      await axios.get(`${backendEndpoint}/wifi?state=on`, {headers: { Authorization: authData.token }});
+    };
+
+    const wifiOffHandler = async () => {
+      await axios.get(`${backendEndpoint}/wifi?state=off`, {headers: { Authorization: authData.token }});
+    };
+
     // SSE подписка на события об изменении состояния устройства
     useEffect(() => {
         const eventSourceUrl = new URL(`${backendEndpoint}/dynamic_data_events/${deviceId}`);
@@ -59,25 +68,27 @@ const ComplexStatus = () => {
 
 
     useEffect(() => {
-      const eventSourceUrl = new URL(`${backendEndpoint}/gpio_state`);
-      eventSourceUrl.searchParams.append('Authorization', authData.token);
-      const eventSource = new EventSource(eventSourceUrl.toString());
-      
-      eventSource.onmessage = (event) => {
-          const recvData = JSON.parse(event.data);
-          setGpioData(recvData)
-      };
+        const eventSourceUrl = new URL(`${backendEndpoint}/gpio_state`);
+        eventSourceUrl.searchParams.append('Authorization', authData.token);
+        const eventSource = new EventSource(eventSourceUrl.toString());
+        
+        eventSource.onmessage = (event) => {
+            const recvData = JSON.parse(event.data);
+            setGpioData(recvData)
+        };
 
-      return () => {
-          eventSource.close();
-      };
-  }, [authData.token]);
+        return () => {
+            eventSource.close();
+        };
+    }, [authData.token]);
 
 
+    
     const fetchDataFromBackend = async (pointName, callback) => {
       try {
         const response = await axios.get(`${backendEndpoint}/${pointName}`, {headers: { Authorization: authData.token }});
         if (response) {
+          // console.log(response.data)
           callback(response.data)
         }
 
@@ -101,10 +112,16 @@ const ComplexStatus = () => {
     };
 
 
+    const fetchWifiStatus = async () => {
+      fetchDataFromBackend('wifi_get', setWifiStatus)
+    };
+
+
     useEffect(() => {
       fetchSettingsData();
       fetchSystemData();
       fetchComplexInfo();
+      fetchWifiStatus();
     }, []);
 
     return (
@@ -114,11 +131,14 @@ const ComplexStatus = () => {
           <Routes>
             <Route path="/*" element={<TabsPage error={error} 
                                                 deviceDynamicData={data}
+                                                wifiStatus={wifiStatus}
                                                 gpioData={gpioData}
                                                 deviceSettings={deviceSettings} 
                                                 deviceSystemInfo={deviceSystemInfo} 
                                                 complexInfo={complexInfo}
-                                                logoutUser={logoutUser}/>} />
+                                                logoutUser={logoutUser}
+                                                wifiOnHandler={wifiOnHandler}
+                                                wifiOffHandler={wifiOffHandler}/>} />
           </Routes>
         </BrowserRouter>
       }
