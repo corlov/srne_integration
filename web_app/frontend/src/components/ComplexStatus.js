@@ -9,15 +9,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import TabsPage from "./TabsPage";
 import { backendEndpoint } from '../global_consts/Backend'
 
-const deviceId = 2
-
-
 const ComplexStatus = () => {
     const dispatch = useDispatch();
     const authData = useSelector((state) => state.auth);
+    const [deviceId, setDeviceId] = useState(authData.deviceId);
     const [data, setData] = useState(null);
     const [gpioData, setGpioData] = useState(null);
     const [wifiStatus, setWifiStatus] = useState(null);
+    //const [wifiWaiting, setWifiWaiting] = useState(false);
     const [error, setError] = useState('error');
     const [deviceSettings, setSettings] = useState(null)
     const [deviceSystemInfo, setSystemInfo] = useState(null)
@@ -41,12 +40,9 @@ const ComplexStatus = () => {
         dispatch(logout());
     };
 
-    const wifiOnHandler = async () => {
-      await axios.get(`${backendEndpoint}/wifi?state=on`, {headers: { Authorization: authData.token }});
-    };
-
-    const wifiOffHandler = async () => {
-      await axios.get(`${backendEndpoint}/wifi?state=off`, {headers: { Authorization: authData.token }});
+    const wifiModeHandler = async (mode) => {
+      const modeParam = mode ? 'on' : 'off'
+      await axios.get(`${backendEndpoint}/wifi?state=${modeParam}`, {headers: { Authorization: authData.token }});
     };
 
     // SSE подписка на события об изменении состояния устройства
@@ -66,7 +62,6 @@ const ComplexStatus = () => {
         };
     }, [authData.token]);
 
-
     useEffect(() => {
         const eventSourceUrl = new URL(`${backendEndpoint}/gpio_state`);
         eventSourceUrl.searchParams.append('Authorization', authData.token);
@@ -82,73 +77,50 @@ const ComplexStatus = () => {
         };
     }, [authData.token]);
 
-
-    
-    const fetchDataFromBackend = async (pointName, callback) => {
-      try {
-        const response = await axios.get(`${backendEndpoint}/${pointName}`, {headers: { Authorization: authData.token }});
-        if (response) {
-          // console.log(response.data)
-          callback(response.data)
-        }
-
-      } catch (err) {
-        console.log(err.message)
-        setError(err.message);
-      }
-    };
-
-    const fetchComplexInfo = async () => {
-      fetchDataFromBackend('complex_settings', setComplexInfo)
-    };
-
-    const fetchSettingsData = async () => {
-      fetchDataFromBackend(`settings?deviceId=${deviceId}`, setSettings)
-    };
-
-
-    const fetchSystemData = async () => {
-      fetchDataFromBackend(`system_info?deviceId=${deviceId}`, setSystemInfo)
-    };
-
-
-    const fetchWifiStatus = async () => {
-      fetchDataFromBackend('wifi_get', setWifiStatus)
-    };
-
-
     useEffect(() => {
-      fetchSettingsData();
-      fetchSystemData();
-      fetchComplexInfo();
-      fetchWifiStatus();
-    }, []);
+      const eventSourceUrl = new URL(`${backendEndpoint}/update_status/${deviceId}`);
+      eventSourceUrl.searchParams.append('Authorization', authData.token);
 
-    return (
-      <>
-      {error ? <>Запустите backend!</> :
-        <BrowserRouter>
-          <Routes>
-            <Route path="/*" element={<TabsPage error={error} 
-                                                deviceDynamicData={data}
-                                                wifiStatus={wifiStatus}
-                                                gpioData={gpioData}
-                                                deviceSettings={deviceSettings} 
-                                                deviceSystemInfo={deviceSystemInfo} 
-                                                complexInfo={complexInfo}
-                                                logoutUser={logoutUser}
-                                                wifiOnHandler={wifiOnHandler}
-                                                wifiOffHandler={wifiOffHandler}/>} />
-          </Routes>
-        </BrowserRouter>
-      }
-      </>
-    );
+      const eventSource = new EventSource(eventSourceUrl.toString());
+      
+      eventSource.onmessage = (event) => {
+          const recvData = JSON.parse(event.data);
+          
+          // console.log(recvData)
+          setComplexInfo(recvData.complex_settings)
+          setSettings(recvData.device_settings)
+          setSystemInfo(recvData.device_system_info)
+          setWifiStatus(recvData.wifi)
+      };
+
+      return () => {
+          eventSource.close();
+      };
+  }, [authData.token]);
+
+
+  return (
+    <>
+    {error ? <>Запустите backend!</> :
+      <BrowserRouter>
+        <Routes>
+          <Route path="/*" element={
+            <TabsPage 
+              error={error} 
+              deviceDynamicData={data}
+              wifiStatus={wifiStatus}
+              gpioData={gpioData}
+              deviceSettings={deviceSettings} 
+              deviceSystemInfo={deviceSystemInfo} 
+              complexInfo={complexInfo}
+              logoutUser={logoutUser}
+              wifiModeHandler={wifiModeHandler}/>
+          } />
+        </Routes>
+      </BrowserRouter>
+    }
+    </>
+  );
 };
 
 export default ComplexStatus;
-
-
-
-
-    

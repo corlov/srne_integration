@@ -6,8 +6,10 @@ import axios from 'axios';
 import '../assets/styles/Login.css';
 
 const Login = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('user');
+    const [password, setPassword] = useState('123');
+    const [deviceId, setDeviceId] = useState('2'); 
+
     const dispatch = useDispatch();
     const [error, setError] = useState();
 
@@ -17,7 +19,12 @@ const Login = () => {
             setError('')
         
             if (response.data.token) {
-              dispatch(login({username: username, loginTimestamp: Math.floor(Date.now() / 1000), token: response.data.token}));
+              dispatch(login({
+                username: username, 
+                loginTimestamp: Math.floor(Date.now() / 1000), 
+                token: response.data.token,
+                deviceId: deviceId
+            }));
             }
             else {
               setError('Введен неправильный пользователь или пароль')
@@ -42,6 +49,24 @@ const Login = () => {
             (
                 <div className="container">
                     <div className="form-group">
+                        <label htmlFor="deviceId">ID устройства SmartWatt</label>
+                        <select
+                            id="deviceId"
+                            value={deviceId}
+                            onChange={(e) => setDeviceId(e.target.value)}
+                        >
+                            {[...Array(8)].map((_, i) => {
+                            const val = String(i + 1);
+                            return (
+                                <option key={val} value={val}>
+                                {val}
+                                </option>
+                            );
+                            })}
+                        </select>
+                    </div>
+
+                    <div className="form-group">
                         <label htmlFor="email">Пользователь</label>
                         <input
                             type="text"
@@ -61,6 +86,8 @@ const Login = () => {
                     </div>
                     <button onClick={loginUser}>Войти</button>
                 </div>
+
+                
             )
         }</>
     );

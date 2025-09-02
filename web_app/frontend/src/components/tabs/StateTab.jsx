@@ -56,7 +56,7 @@ export default function StateTab({error, deviceDynamicData, wifiStatus, gpioData
     { name: "Ток на СП (А)", value: deviceDynamicData.panels.amps },
 
     { name: "The current day of battery discharging amp-hrs", value: deviceDynamicData.load.dailyAmpHours },
-    { name: "Макс.ток разрядки за сегодня (А)", value: deviceDynamicData.load.maxAmps },
+    { name: "Макс.ток разрядки за сегодня (А)", value: (deviceDynamicData.load.maxAmps).toFixed(2) },
     { name: "Макс.мощность разряда за сегодня (Вт)", value: deviceDynamicData.load.maxWatts },
     { name: "The battery of total discharging amp-hrs", value: deviceDynamicData.load.totalAmpHours },
     { name: "The load of Cumulative power consumption", value: deviceDynamicData.load.totalPower },
@@ -133,16 +133,30 @@ export default function StateTab({error, deviceDynamicData, wifiStatus, gpioData
       <span>откл.</span>;
   }
 
+
+  function getWifiMode(wifiStatusMode) {
+    if (wifiStatusMode == null) {
+      return <span className="unknown-status">Не доступно</span>;
+    }
+    
+    return wifiStatusMode == 'Вкл.' ? 
+      <span className="green-text">{wifiStatusMode}</span> : 
+      <span>{wifiStatusMode}</span>;
+  }
+
+
+  const wifiError = (wifiStatus && wifiStatus.error_text != null && wifiStatus.error_details != null) ? `${wifiStatus.error_text} ${wifiStatus.error_details}` : 'Нет данных';
+
   // TODO: это заглушки
   const complexState = {
-    'WiFi': wifiStatus.mode,
-    'WiFi ошибка': `${wifiStatus.error_text} (${wifiStatus.error_details})`,
+    'WiFi': getWifiMode(wifiStatus?.mode),
+    'WiFi ошибка': wifiError,
     'Дверь шкафа': getDoorStatus(gpioData?.open_door_alarm),
     'Режим работы светильника': complexInfo.load_work_mode,
     'Режим работы светофора': complexInfo.trafficlight_work_mode,
-    'Ключ К2 (светофор)': getKeyStatus(gpioData.k2),
-    'Ключ К3 (лампа)': getKeyStatus(gpioData.k3),
-    'Ключ К4 (модем)': getKeyStatus(gpioData.k4),
+    'Ключ К2 (светофор)': getKeyStatus(gpioData?.k2),
+    'Ключ К3 (лампа)': getKeyStatus(gpioData?.k3),
+    'Ключ К4 (модем)': getKeyStatus(gpioData?.k4),
 };
 
   return (

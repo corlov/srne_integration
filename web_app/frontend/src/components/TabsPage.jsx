@@ -18,8 +18,7 @@ export default function TabsPage({
   deviceSystemInfo, 
   complexInfo, 
   logoutUser, 
-  wifiOnHandler, 
-  wifiOffHandler
+  wifiModeHandler
 }) {
     const dispatch = useDispatch();
     const authData = useSelector((state) => state.auth);
@@ -53,8 +52,8 @@ export default function TabsPage({
           
           <div className="header-right">
             WiFi:
-            <button className="logout-btn" onClick={wifiOnHandler}>On</button>
-            <button className="logout-btn" onClick={wifiOffHandler}>Off</button>
+            <button className="logout-btn" onClick={() => wifiModeHandler(true)}>On</button>
+            <button className="logout-btn" onClick={() => wifiModeHandler(false)}>Off</button>
             [Пользователь: <b>{authData.username},</b> дата входа: {loginDatetime}]
             <button className="logout-btn" onClick={logoutUser}>Выход</button>
           </div>

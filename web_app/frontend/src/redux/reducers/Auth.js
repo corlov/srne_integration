@@ -12,12 +12,14 @@ const authReducer = (state = initialState, action) => {
                 username: action.payload.username,
                 loginTimestamp: action.payload.loginTimestamp,
                 token: action.payload.token,
+                deviceId: action.payload.deviceId
             };
         case 'LOGOUT':
             return {
                 ...state,
                 isAuthenticated: false,
                 username: null,
+                deviceId: null
             };
         default:
             return state;

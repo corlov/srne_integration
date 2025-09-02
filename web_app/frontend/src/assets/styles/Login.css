@@ -55,3 +55,9 @@ button:hover {
     text-align: center;
     margin-top: 10px;
 }
+
+.form-group select {
+    width: 100%;
+    display: block;
+    box-sizing: border-box;
+  }
