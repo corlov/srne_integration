@@ -14,7 +14,7 @@ REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 
 RK_WIFI_STATUS = 'wifi_status'
 RK_WIFI_ON_REQ = 'wifi_activate_on_request'
-RK_WIFI_OFF_REQ = 'wifi_activate__off_request'
+RK_WIFI_OFF_REQ = 'wifi_activate_off_request'
 RK_WIFI_TS = 'wifi_activate_ts'
 RK_WIFI_ERROR = 'wifi_error_text'
 RK_WIFI_ERROR_DETAILS = 'wifi_error_text_details'
@@ -71,6 +71,7 @@ def run_command_sleep(wifi_on):
 def send_activate_wifi_cmd(wifi_on):
     global r
 
+    r.set(RK_WIFI_STATUS, 'Ожидание...')
     if wifi_on:
         error_details = ''
         error_details += run_command_sleep('nmcli radio wifi off')
@@ -125,7 +126,11 @@ def main():
 
     try:
         while True:
-            print('tick', ts_activate_ts, int(time.time()) - ts_activate_ts)            
+            cur_state = r.get(RK_WIFI_STATUS).decode('utf-8') + '], on: ' + r.get(RK_WIFI_ON_REQ).decode('utf-8') + ', off: '+ r.get(RK_WIFI_OFF_REQ).decode('utf-8') + ', ts: '+r.get(RK_WIFI_TS).decode('utf-8')
+            print('tick [', cur_state)
+            
+            # r.set(RK_WIFI_ERROR, time.time())
+            # r.set(RK_WIFI_ERROR_DETAILS, time.time())
             time.sleep(1)
 
             if not is_connected(r):
@@ -135,7 +140,7 @@ def main():
             if r.exists(RK_WIFI_ON_REQ):
                 req = int(r.get(RK_WIFI_ON_REQ))
                 if req:
-                    print('on Req, ', req)
+                    print('new command: on Req, ', req)
                     ts_activate_ts = int(time.time())
                     r.set(RK_WIFI_TS, ts_activate_ts)
                     r.set(RK_WIFI_ON_REQ, 0)
@@ -143,7 +148,7 @@ def main():
             else:
                 r.set(RK_WIFI_ON_REQ, 0)
 
-            if ts_activate_ts > 0 and int(time.time()) - ts_activate_ts > 15:#60*60:
+            if ts_activate_ts > 0 and int(time.time()) - ts_activate_ts > 3*60:#60*60:
                 send_activate_wifi_cmd(False)
                 ts_activate_ts = 0
 
@@ -152,7 +157,7 @@ def main():
             if r.exists(RK_WIFI_OFF_REQ):
                 req = int(r.get(RK_WIFI_OFF_REQ))
                 if req:
-                    print('off Req, ', req)
+                    print('new command: off Req, ', req)
                     r.set(RK_WIFI_OFF_REQ, 0)
                     send_activate_wifi_cmd(False)
                     ts_activate_ts = 0
