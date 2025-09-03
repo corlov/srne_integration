@@ -13,7 +13,7 @@ function RightCard({ title, children }) {
   );
 }
 
-export default function StateTab({error, deviceDynamicData, wifiStatus, gpioData, deviceSettings, deviceSystemInfo, complexInfo}) {
+export default function StateTab({error, deviceDynamicData, wifiStatus, gpioData, deviceSettings, deviceSystemInfo, complexInfo, keyBtnClick}) {
 
   const deviceDynamicDataTime = useMemo(() => {
       if (!deviceDynamicData || !deviceDynamicData.ts || !wifiStatus) {
@@ -123,6 +123,16 @@ export default function StateTab({error, deviceDynamicData, wifiStatus, gpioData
       <span className="green-text">закрыта</span>;
   }
 
+  function getWifiBtnStatus(isPressed) {
+    if (isPressed == null) {
+      return <span className="unknown-status">неизвестно</span>;
+    }
+    
+    return isPressed ? 
+      <span><b>нажата</b></span> : 
+      <span>не нажата</span>;
+  }
+
   function getKeyStatus(key) {
     if (key == null) {
       return <span className="unknown-status">неизвестно</span>;
@@ -149,6 +159,7 @@ export default function StateTab({error, deviceDynamicData, wifiStatus, gpioData
 
   // TODO: это заглушки
   const complexState = {
+    'WiFi кнопка': getWifiBtnStatus(gpioData?.wifi_button_is_pressed),
     'WiFi': getWifiMode(wifiStatus?.mode),
     'WiFi ошибка': wifiError,
     'Дверь шкафа': getDoorStatus(gpioData?.open_door_alarm),
@@ -199,7 +210,13 @@ export default function StateTab({error, deviceDynamicData, wifiStatus, gpioData
           </RightCard>
 
           <RightCard title="Состояние ">
-          <KeyValuePairs data={complexState}/>
+            
+            <KeyValuePairs data={complexState}/>
+            <div>
+            <button className="logout-btn" onClick={() => (keyBtnClick(22))}>K2</button>
+            <button className="logout-btn" onClick={() => (keyBtnClick(24))}>K3</button>
+            <button className="logout-btn" onClick={() => (keyBtnClick(26))}>K4</button>
+            </div>
           </RightCard>
         </main>
       </div>

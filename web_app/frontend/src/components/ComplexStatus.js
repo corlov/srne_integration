@@ -5,6 +5,7 @@ import { useDispatch } from 'react-redux';
 import { logout } from '../redux/actions/Auth';
 import '../assets/styles/Login.css';
 import '../assets/styles/custom.css';
+import '../assets/styles/bootstrap.min.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import TabsPage from "./TabsPage";
 import { backendEndpoint } from '../global_consts/Backend'
@@ -16,25 +17,10 @@ const ComplexStatus = () => {
     const [data, setData] = useState(null);
     const [gpioData, setGpioData] = useState(null);
     const [wifiStatus, setWifiStatus] = useState(null);
-    //const [wifiWaiting, setWifiWaiting] = useState(false);
     const [error, setError] = useState('error');
     const [deviceSettings, setSettings] = useState(null)
     const [deviceSystemInfo, setSystemInfo] = useState(null)
     const [complexInfo, setComplexInfo] = useState(null)
-
-    // FIXME: убрать внешнюю зависимость
-    useEffect(() => {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css';
-        document.head.appendChild(link);
-    
-        // Cleanup function to remove the link when the component unmounts
-        return () => {
-          document.head.removeChild(link);
-        };
-      }, []);
-
 
     const logoutUser = async () => {
         dispatch(logout());
@@ -42,10 +28,21 @@ const ComplexStatus = () => {
 
     const wifiModeHandler = async (mode) => {
       const modeParam = mode ? 'on' : 'off'
-      await axios.get(`${backendEndpoint}/wifi?state=${modeParam}`, {headers: { Authorization: authData.token }});
+      await axios.get(`${backendEndpoint}/wifi?state=${modeParam}`, 
+        {headers: { Authorization: authData.token }});
     };
 
-    // SSE подписка на события об изменении состояния устройства
+    const keyBtnClick = async (pin) => {
+      await axios.get(`${backendEndpoint}/gpio_set_pin?pin=${pin}`, 
+        {headers: { Authorization: authData.token }});
+    };
+
+    const loadControlClick = async (modeValue) => {
+      await axios.get(`${backendEndpoint}/load_control?mode=${modeValue}&device_id=${deviceId}`, 
+        {headers: { Authorization: authData.token }});
+    };
+    
+
     useEffect(() => {
         const eventSourceUrl = new URL(`${backendEndpoint}/dynamic_data_events/${deviceId}`);
         eventSourceUrl.searchParams.append('Authorization', authData.token);
@@ -86,7 +83,7 @@ const ComplexStatus = () => {
       eventSource.onmessage = (event) => {
           const recvData = JSON.parse(event.data);
           
-          // console.log(recvData)
+          console.log(recvData)
           setComplexInfo(recvData.complex_settings)
           setSettings(recvData.device_settings)
           setSystemInfo(recvData.device_system_info)
@@ -97,7 +94,6 @@ const ComplexStatus = () => {
           eventSource.close();
       };
   }, [authData.token]);
-
 
   return (
     <>
@@ -114,7 +110,9 @@ const ComplexStatus = () => {
               deviceSystemInfo={deviceSystemInfo} 
               complexInfo={complexInfo}
               logoutUser={logoutUser}
-              wifiModeHandler={wifiModeHandler}/>
+              wifiModeHandler={wifiModeHandler}
+              keyBtnClick={keyBtnClick}
+              loadControlClick={loadControlClick}/>
           } />
         </Routes>
       </BrowserRouter>

@@ -19,6 +19,13 @@
     font-size: 14px;
     min-width: 120px;
   }
+
+  .key-label-header {
+    font-weight: 600;
+    color: #434dce;
+    font-size: 18px;
+    min-width: 120px;
+  }
   
   .value-highlight {
     padding: 8px 16px;

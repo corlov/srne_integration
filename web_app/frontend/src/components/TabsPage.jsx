@@ -6,6 +6,8 @@ import StateTab from "./tabs/StateTab";
 import EventsLogTab from "./tabs/EventsLogTab";
 import ParamsLogTab from "./tabs/ParamsLogTab";
 import SettingsTab from "./tabs/SettingsTab";
+import SysInfoTab from "./tabs/SysInfoTab";
+import ControllerSettingsTab from "./tabs/ControllerSettingsTab";
 import "../assets/styles/tabs.css";
 
 
@@ -18,7 +20,9 @@ export default function TabsPage({
   deviceSystemInfo, 
   complexInfo, 
   logoutUser, 
-  wifiModeHandler
+  wifiModeHandler,
+  keyBtnClick,
+  loadControlClick
 }) {
     const dispatch = useDispatch();
     const authData = useSelector((state) => state.auth);
@@ -51,6 +55,9 @@ export default function TabsPage({
   
           
           <div className="header-right">
+            Лампа:
+            <button className="logout-btn" onClick={() => loadControlClick(1)}>Вкл.</button>
+            <button className="logout-btn" onClick={() => loadControlClick(0)}>Откл.</button>
             WiFi:
             <button className="logout-btn" onClick={() => wifiModeHandler(true)}>On</button>
             <button className="logout-btn" onClick={() => wifiModeHandler(false)}>Off</button>
@@ -80,7 +87,12 @@ export default function TabsPage({
               ) : null}
 
               {authData.username === 'user' ? (
-                <ul>                
+                <ul>
+                  <li>
+                      <hr/>
+                      <b>Автоматизированый Комплекс</b>
+                      <hr/>
+                  </li>
                   <li>
                     <NavLink to="state" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
                       Состояние
@@ -101,6 +113,23 @@ export default function TabsPage({
                       Настройки
                     </NavLink>
                   </li>
+
+                  <li>
+                      <hr/>
+                      <b>Контроллер СП</b>
+                      <hr/>
+                  </li>
+                  <li>
+                    <NavLink to="system_info" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+                      Системная информация
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink to="controller_settings" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+                      Настройки контроллера
+                    </NavLink>
+                  </li>
+
                 </ul>
               ) : null}
             </nav>
@@ -116,10 +145,14 @@ export default function TabsPage({
                   gpioData={gpioData} 
                   deviceSettings={deviceSettings} 
                   deviceSystemInfo={deviceSystemInfo} 
-                  complexInfo={complexInfo}/>} />
+                  complexInfo={complexInfo}
+                  keyBtnClick={keyBtnClick}
+                  />} />
               <Route path="events" element={<EventsLogTab />} />
               <Route path="params" element={<ParamsLogTab />} />
               <Route path="settings" element={<SettingsTab />} />
+              <Route path="system_info" element={<SysInfoTab deviceSystemInfo={deviceSystemInfo}/>} />
+              <Route path="controller_settings" element={<ControllerSettingsTab deviceSettings={deviceSettings}/>} />
             </Routes>
           </main>
         </div>
