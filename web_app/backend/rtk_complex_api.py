@@ -13,11 +13,11 @@ from psycopg2 import sql
 import psycopg2.extras
 
 # FIXME: это с модулем GPIO общие настройки, их можно хранить в БД, например
-PIN_OUT_K2_TRAFFICLIGHT = 11
-PIN_OUT_K3_LAMP = 13
-PIN_OUT_K4_MODEM = 15
-PIN_IN_WIFI_BUTTON = 16
-PIN_IN_CABINET_OPEN_DOOR_BUTTON = 18
+PIN_OUT_K2_TRAFFICLIGHT = 22
+PIN_OUT_K3_LAMP = 24
+PIN_OUT_K4_MODEM = 26
+PIN_IN_CABINET_OPEN_DOOR_BUTTON = 16
+PIN_IN_WIFI_BUTTON = 18
 
 
 app = Flask(__name__)
@@ -77,16 +77,17 @@ def redis_read_v(key_name):
 def events_gpio():
     def generate_events():
         while True:
-            print('gpio event')
-
             data_dict = {
                 'k2': redis_read(f'GPIO.{PIN_OUT_K2_TRAFFICLIGHT}'),
                 'k3': redis_read(f'GPIO.{PIN_OUT_K3_LAMP}'),
                 'k4': redis_read(f'GPIO.{PIN_OUT_K4_MODEM}'),
                 'k4': redis_read(f'GPIO.{PIN_OUT_K4_MODEM}'),
-                'open_door_alarm': redis_read(f'GPIO.{PIN_IN_CABINET_OPEN_DOOR_BUTTON}') 
+                'open_door_alarm': redis_read(f'GPIO.{PIN_IN_CABINET_OPEN_DOOR_BUTTON}'),
+                'wifi_button_is_pressed': redis_read(f'GPIO.{PIN_IN_WIFI_BUTTON}') 
             }
             yield f"data: {json.dumps(data_dict)}\n\n"
+
+            print('gpio event', data_dict)
             time.sleep(5)
 
     token = request.args.get('Authorization')    
@@ -487,6 +488,47 @@ def login():
     return jsonify(message='Invalid credentials')
 
 
+
+
+@app.route('/gpio_set_pin', methods=['GET'])
+def gpio_set_pin():
+    pin = request.args.get('pin')
+
+    r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
+    state = r.get(f'GPIO.{pin}')
+    if int(state):
+        r.set(f'GPIO.{pin}', 0)
+        print(f'GPIO.{pin} 0')
+    else:
+        r.set(f'GPIO.{pin}', 1)
+        print(f'GPIO.{pin} 1')
+    return 'ok'
+
+
+
+def cmd_body(command_name):
+    now = datetime.datetime.now()
+    cmd = {}
+    #TODO: авторизацию на распбери надо сделать хотя бы basic
+    cmd['user'] = 'admin'
+    cmd['command'] = command_name
+    cmd['created_at'] = str(now.timestamp())
+    cmd['uuid'] = str(uuid.uuid4())
+    return cmd
+
+
+
+@app.route('/load_control', methods=['GET'])
+def load_control():
+    mode = request.args.get('mode')
+    device_id = request.args.get('device_id')
+
+    r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
+    cmd = cmd_body('control_load_on_off')
+    cmd['value'] = mode
+    r.set('command' + str(device_id), json.dumps(cmd))
+
+    return 'ok'
 
 
 @app.route('/wifi', methods=['GET'])

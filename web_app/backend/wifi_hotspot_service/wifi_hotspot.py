@@ -12,6 +12,7 @@ from psycopg2 import sql
 REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
 
+#FIXME: это названия ключей для нескольких микросервисов используются - нужно в БД или куда то еще определить
 RK_WIFI_STATUS = 'wifi_status'
 RK_WIFI_ON_REQ = 'wifi_activate_on_request'
 RK_WIFI_OFF_REQ = 'wifi_activate_off_request'
@@ -136,7 +137,7 @@ def main():
             if not is_connected(r):
                 r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
 
-            # есть команда включения Wifi?
+            # есть команда включения Wifi? 
             if r.exists(RK_WIFI_ON_REQ):
                 req = int(r.get(RK_WIFI_ON_REQ))
                 if req:
