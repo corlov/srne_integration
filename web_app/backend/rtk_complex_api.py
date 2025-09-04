@@ -383,7 +383,7 @@ def events_log():
 @app.route("/api/settings", methods=["GET"])
 def list_settings():
     with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-        cur.execute("select id, descr as name, value, type, options from device.complex_settings cs order by id")
+        cur.execute("select id, descr as name, value, type, options from device.complex_settings cs order by ui_field_order")        
 
         rows = cur.fetchall()
         # options stored as JSON in DB; psycopg2 will map to Python list/dict
@@ -489,7 +489,7 @@ def login():
 
 
 
-
+# FIXME: нужно проверить что это 22 24 26 пин
 @app.route('/gpio_set_pin', methods=['GET'])
 def gpio_set_pin():
     pin = request.args.get('pin')
@@ -635,7 +635,7 @@ def get_complex_settings():
     try:
         conn = psycopg2.connect(**connection_params)
         cursor = conn.cursor()
-        query = sql.SQL("SELECT param, value FROM solar_controller_telemetry.device.complex_settings")
+        query = sql.SQL("SELECT param, value FROM solar_controller_telemetry.device.complex_settings order by ui_field_order")
         cursor.execute(query)        
         rows = cursor.fetchall()
         result_dict = {key: value for key, value in rows}
