@@ -380,10 +380,41 @@ def events_log():
 
 
 
+@app.route("/api/change_time_source", methods=["GET"])
+def change_time_source():
+    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            SELECT 
+                MAX(CASE WHEN param = 'time_source' THEN value END) as src,
+                MAX(CASE WHEN param = 'time_source_addr' THEN value END) as addr
+            FROM device.complex_settings
+            WHERE param IN ('time_source', 'time_source_addr')
+        """)
+        rs = cur.fetchone()
+        if not rs:
+            return None, None
+        src = rs["src"]
+        addr = rs["addr"]
+
+        print(src, addr)
+        if src == 'NTP' and addr:
+            print('source: NTP')
+            os.system('systemctl stop chronyd')            
+            os.system("sed -i '1i\server " + addr + " iburst prefer' /etc/chrony/chrony.conf")
+            os.system('systemctl start chronyd')
+        else:
+            print('source: RTC')
+            os.system('systemctl stop chronyd')
+
+    return 'ok'
+
+
+   
+
 @app.route("/api/settings", methods=["GET"])
 def list_settings():
     with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-        cur.execute("select id, descr as name, value, type, options from device.complex_settings cs order by ui_field_order")        
+        cur.execute("select id, descr as name, value, type, options, param from device.complex_settings cs order by ui_field_order")        
 
         rows = cur.fetchall()
         # options stored as JSON in DB; psycopg2 will map to Python list/dict

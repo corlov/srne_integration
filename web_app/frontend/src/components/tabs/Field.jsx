@@ -23,6 +23,10 @@ function Field({ setting, onSave }) {
         alert("Error: " + text);
       } else {
         onSave();
+
+        if (setting.param == 'time_source') {
+          await fetch(`${backendEndpoint}//api/change_time_source`);
+        }
       }
     } finally {
       setSaving(false);
