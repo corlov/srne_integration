@@ -113,3 +113,28 @@ def store_cmd_status(id, status, err_text):
         if conn:
             conn.close()
     
+
+
+def read_settings_from_db():
+    cursor = None
+    conn = None
+    try:
+        conn = psycopg2.connect(**glb.PG_CONNECT_PARAMS)
+        cursor = conn.cursor()
+        query = """
+            select 
+                (select value from device.complex_settings where param = 'commands_debounce_seconds') as cmd,
+                (select value from device.complex_settings where param = 'solar_panel_state_debounce_seconds') as state
+        """
+        cursor.execute(query)
+
+        row = cursor.fetchone()
+        cmd_timeout, state_timeout = row[0], row[1]        
+        cursor.close()
+        conn.close()
+
+        print('read_settings_from_db', cmd_timeout, state_timeout)
+        return int(cmd_timeout), int(state_timeout)
+    except Exception as e:
+        u.logmsg(f"An error occurred: {e}", u.L_ERROR)
+        return None, None

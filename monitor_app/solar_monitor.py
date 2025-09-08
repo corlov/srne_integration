@@ -7,8 +7,7 @@ import json
 import redis
 from pymodbus.client import ModbusSerialClient as ModbusClient
 import serial
-from datetime import datetime
-import psycopg2
+from datetime import datetime, timedelta
 import logging
 import glb_consts as glb
 import utils as u
@@ -20,10 +19,17 @@ import inmemory as im
 
 
 modbus = None
-
+StateTimeout = glb.DELAY_BETWEEN_REQUESTS
+CmdTimeout = glb.DELAY_BETWEEN_COMMANDS
 
 
 def init():
+    global CmdTimeout
+    global StateTimeout
+
+    StateTimeout = glb.DELAY_BETWEEN_REQUESTS
+    CmdTimeout = glb.DELAY_BETWEEN_COMMANDS
+
     if not os.path.exists(glb.LOG_PATH):
         os.makedirs(glb.LOG_PATH)    
 
@@ -53,10 +59,14 @@ def init():
         'port': int(os.getenv('DB_PORT', 5432)), 
     }
     glb.PUBLISH_BROKER_ENABLED = os.getenv('PUBLISH_BROKER_ENABLED', True)
-    glb.MQTT_SERVER_ADDR = os.getenv('MQTT_SERVER_ADDR', "192.168.1.199")
+    glb.MQTT_SERVER_ADDR = os.getenv('MQTT_SERVER_ADDR', "127.0.0.1")
     glb.MQTT_PORT = int(os.getenv('MQTT_PORT', 1883))
     glb.MQTT_USER = os.getenv('MQTT_USER', 'srne_user')
     glb.MQTT_PASS = os.getenv('MQTT_PASS', 'qwe123')
+
+    CmdTimeout, StateTimeout = db.read_settings_from_db()
+    print(CmdTimeout, StateTimeout)
+
     u.logmsg("[OK]  init")
 
 
@@ -133,49 +143,59 @@ def exec_command(cmd):
 
 
 def run():
+    import pymodbus
+    u.logmsg(f"*** pymodbus version: {pymodbus.__version__} ***")
+    
+    global CmdTimeout
+    global StateTimeout
     global modbus
+
+    print(CmdTimeout, StateTimeout)
 
     db.load_history_to_redis()
     db.clean_db()
 
+    previous_time_cmd = datetime.now() - timedelta(seconds=CmdTimeout)
+    previous_time_save_state = datetime.now() - timedelta(seconds=StateTimeout)
     cleanup_counter = 0
     t = 0
     first_loop = True
     while True:
-        command_str = sc.get_external_command()
-        if command_str is None:
-            time.sleep(glb.DELAY_BETWEEN_COMMANDS)
-            if modbus:
-                if modbus.connect():
-                    modbus.close()
-            continue
-        elif command_str:
-            command = json.loads(command_str)
-            id = db.store_cmd(command)
-            if id:
-                status, err_text = exec_command(command)
-                u.logmsg(f"status: {status}, error: {err_text}")
-                db.store_cmd_status(id, status, err_text)
-                im.store_command_response(id, command['uuid'], status, err_text)
-            
-        time.sleep(glb.DELAY_BETWEEN_COMMANDS)
-        t += glb.DELAY_BETWEEN_COMMANDS
+        time.sleep(1)
+        current_time = datetime.now()
         
-        cleanup_counter += 1
-        if cleanup_counter > glb.CLEANUP_LIMIT:
+        if (current_time - previous_time_cmd) > timedelta(seconds=CmdTimeout):
+            previous_time_cmd = current_time
+            command_str = sc.get_external_command()
+            if command_str is None:
+                u.logmsg(f"empty command")
+                if modbus:
+                    if modbus.connect():
+                        modbus.close()
+                continue
+            elif command_str:
+                command = json.loads(command_str)
+                u.logmsg(f"command: {command}")
+                id = db.store_cmd(command)
+                if id:
+                    status, err_text = exec_command(command)
+                    u.logmsg(f"status: {status}, error: {err_text}")
+                    db.store_cmd_status(id, status, err_text)
+                    im.store_command_response(id, command['uuid'], status, err_text)
+        
+        
+        if (current_time - previous_time_save_state) > timedelta(seconds=StateTimeout):
+            u.logmsg("save state")
+            previous_time_save_state = current_time
+
             db.clean_db()
-            cleanup_counter = 0
+            CmdTimeout, StateTimeout = db.read_settings_from_db()
 
-
-        # чтобы сделать таймаут проверки наличия команд и таймаут считывания состояния независимыми величинами
-        if t >= glb.DELAY_BETWEEN_REQUESTS or first_loop:
-            t = 0
-            first_loop = False
             try:
                 modbus = ModbusClient(port=glb.DEVICE_SYS_ADDR, baudrate=9600, stopbits=1, bytesize=8, parity='N', timeout=5)
                 if modbus.connect():
                     read_data()
-                    u.logmsg("== tick =============================")
+                    u.logmsg(f"== tick {current_time}=============================")
                     modbus.close()
                 else:
                     u.logmsg(f"Failed to connect to Modbus server INIT '{glb.DEVICE_SYS_ADDR}'")
