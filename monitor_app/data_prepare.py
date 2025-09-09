@@ -265,7 +265,7 @@ def read_system_information(modbus):
 
             cursor.close()
             conn.close()
-            u.logmsg('system_information updated')
+            u.logmsg('[OK]  system_information updated')
         except Exception as e:
             u.logmsg(f"read_system_information, Error occurred: {e}", u.L_ERROR)
 
@@ -420,7 +420,6 @@ def read_controller_settings(modbus):
         settings_text = json.dumps(settings)
 
         r.set(im.RK_SETTINGS + str(glb.DEVICE_ID), settings_text)
-        u.logmsg(f"[OK]     read_controller_settings")
         
         if glb.PUBLISH_BROKER_ENABLED:
             br.publish(br.TOPIC_SETTINGS, settings_text)

@@ -58,17 +58,14 @@ def init():
         'host': os.getenv('DB_HOST', 'localhost'), 
         'port': int(os.getenv('DB_PORT', 5432)), 
     }
-    glb.PUBLISH_BROKER_ENABLED = os.getenv('PUBLISH_BROKER_ENABLED', True)
+    glb.PUBLISH_BROKER_ENABLED = os.getenv('PUBLISH_BROKER_ENABLED', False)
     glb.MQTT_SERVER_ADDR = os.getenv('MQTT_SERVER_ADDR', "127.0.0.1")
     glb.MQTT_PORT = int(os.getenv('MQTT_PORT', 1883))
     glb.MQTT_USER = os.getenv('MQTT_USER', 'srne_user')
     glb.MQTT_PASS = os.getenv('MQTT_PASS', 'qwe123')
 
     CmdTimeout, StateTimeout = db.read_settings_from_db()
-    print(CmdTimeout, StateTimeout)
-
     im.flush_keys()
-
     u.logmsg("[OK]  init")
 
 
@@ -147,13 +144,11 @@ def exec_command(cmd):
 
 def run():
     import pymodbus
-    u.logmsg(f"*** pymodbus version: {pymodbus.__version__} ***")
+    u.logmsg(f"pymodbus version: {pymodbus.__version__}")
 
     global CmdTimeout
     global StateTimeout
     global modbus
-
-    print(CmdTimeout, StateTimeout)
 
     db.load_history_to_redis()
     db.clean_db()
@@ -188,9 +183,7 @@ def run():
         
         
         if (current_time - previous_time_save_state) > timedelta(seconds=StateTimeout):
-            u.logmsg("save state")
             previous_time_save_state = current_time
-
             db.clean_db()
             CmdTimeout, StateTimeout = db.read_settings_from_db()
 
@@ -198,7 +191,7 @@ def run():
                 modbus = ModbusClient(port=glb.DEVICE_SYS_ADDR, baudrate=9600, stopbits=1, bytesize=8, parity='N', timeout=5)
                 if modbus.connect():
                     read_data()
-                    u.logmsg(f"== tick {current_time}=============================")
+                    u.logmsg(f"=== tick {current_time}   ===")
                     modbus.close()
                 else:
                     u.logmsg(f"Failed to connect to Modbus server INIT '{glb.DEVICE_SYS_ADDR}'")

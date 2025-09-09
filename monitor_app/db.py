@@ -33,7 +33,7 @@ def clean_db():
         cursor.close()
         conn.close()
 
-        u.logmsg('[OK]  clean')
+        u.logmsg('[OK]  Clean DB')
     except Exception as e:
         u.logmsg(f"load_history_to_redis, Error occurred: {str(e)}", u.L_ERROR)        
 
@@ -140,7 +140,6 @@ def read_settings_from_db():
         cursor.close()
         conn.close()
 
-        print('read_settings_from_db', cmd_timeout, state_timeout)
         return int(cmd_timeout), int(state_timeout)
     except Exception as e:
         u.logmsg(f"An error occurred: {e}", u.L_ERROR)
