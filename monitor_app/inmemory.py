@@ -48,3 +48,12 @@ def store_command_response(id, uuid, status, err_text):
         return
 
     u.logmsg('[OK] store_command_response')
+
+
+
+def flush_keys():
+    r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+    r.set(RK_SETTINGS + str(glb.DEVICE_ID), '')
+    r.set(RK_SYS_INFO + str(glb.DEVICE_ID), '')
+    
+

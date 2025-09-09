@@ -67,6 +67,8 @@ def init():
     CmdTimeout, StateTimeout = db.read_settings_from_db()
     print(CmdTimeout, StateTimeout)
 
+    im.flush_keys()
+
     u.logmsg("[OK]  init")
 
 
@@ -87,6 +89,7 @@ def read_data():
     dp.read_system_information(modbus)
     dp.read_controller_settings(modbus)
     dp.read_history(modbus)
+    dp.read_system_information(modbus)
 
 
 
@@ -145,7 +148,7 @@ def exec_command(cmd):
 def run():
     import pymodbus
     u.logmsg(f"*** pymodbus version: {pymodbus.__version__} ***")
-    
+
     global CmdTimeout
     global StateTimeout
     global modbus

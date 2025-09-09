@@ -123,9 +123,8 @@ def read_dynamic_payload(modbus):
     
 
 
-
-
 def read_history(modbus):
+    # нужно проверить есть ли в БД данные за последние 1024 дня и если по какому то дню нет то выдать этот день в датасете
     try:
         conn = psycopg2.connect(**glb.PG_CONNECT_PARAMS)
         cursor = conn.cursor()
@@ -133,26 +132,26 @@ def read_history(modbus):
         # формируем таблицу из 1023 строк, если есть информация за дату то дифф значений будет 0, 
         # иначе полезем в устройство и считаем исторические данные и добавим в БД
         cursor.execute("""
-            select 
-                t.number,
-                t.number - coalesce(EXTRACT(DAY FROM NOW() - actual_date), 0) as d
-            from
-                (SELECT generate_series(1, 1024) AS number) as t
-            left join device.history as h 
-                on t.number = EXTRACT(DAY FROM NOW() - actual_date) 
-                    and h.device_id = %s 
-                    and actual_date >= now() - INTERVAL '1024 days';
+            WITH days AS (
+                SELECT generate_series(
+                    current_date - INTERVAL '1023 days',
+                    current_date,
+                    INTERVAL '1 day'
+                )::date AS d
+            )
+            SELECT d AS missing_date, (now()::date - d) as day_delta
+            FROM days
+            LEFT JOIN device.history t ON t.actual_date::date = d::date  and t.device_id = %s
+            WHERE t.actual_date IS null
+            ORDER BY d desc;
         """, (glb.DEVICE_ID,))
 
         rows = cursor.fetchall()
         updated = False
         for row in rows:
-            # время постоячнно увеличивается и если этой проверки нет то постоянно будет добавляться информация по 1023 дню как будто бы ее нет
-            if row[0] >= 1024:
-                break
-            if row[1]:
+            if int(row[1]) > 0:
                 updated = True
-                day = row[0]
+                day = row[1]
                 #history_data_length = 10
                 addr = sr.add_history_start_addr + day # * history_data_length
                 response = modbus.read_holding_registers(address=addr, count=10, slave=glb.DEVICE_ID)
@@ -191,7 +190,7 @@ def read_history(modbus):
 
 
 
-def read_system_information(modbus):    
+def read_system_information(modbus):
     r = None
     try:
         r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
@@ -199,7 +198,7 @@ def read_system_information(modbus):
         u.logmsg(f"read_system_information, An error occurred: {e}", u.L_ERROR)
         return
 
-    if not r.exists(im.RK_SYS_INFO + str(glb.DEVICE_ID)):
+    if not r.exists(im.RK_SYS_INFO + str(glb.DEVICE_ID)) or r.get(im.RK_SYS_INFO + str(glb.DEVICE_ID)).decode('utf-8') == '':
         response = modbus.read_holding_registers(address=sr.addr_retedChargingCurrent, count=1, slave=glb.DEVICE_ID)
         maxSupportVoltage = response.registers[0] >> 8 
         retedChargingCurrent = response.registers[0] & 0x00FF
@@ -253,15 +252,12 @@ def read_system_information(modbus):
         sys_info_text = json.dumps(system_information)
         r.set(im.RK_SYS_INFO + str(glb.DEVICE_ID), sys_info_text)
 
-        if glb.PUBLISH_BROKER_ENABLED:
-            br.publish(br.TOPIC_SYS_INFO, sys_info_text)
-        
         try:
             conn = psycopg2.connect(**glb.PG_CONNECT_PARAMS)
             cursor = conn.cursor()
 
             insert_query = """
-                INSERT INTO device.system_information(payload, device_id) 
+                INSERT INTO device.system_information (payload, device_id) 
                 VALUES (%s,%s);
             """
             cursor.execute(insert_query, (sys_info_text, glb.DEVICE_ID,))
@@ -271,16 +267,19 @@ def read_system_information(modbus):
             conn.close()
             u.logmsg('system_information updated')
         except Exception as e:
-            u.logmsg(f"read_system_information, Rrror occurred: {e}", u.L_ERROR)
+            u.logmsg(f"read_system_information, Error occurred: {e}", u.L_ERROR)
 
+        if glb.PUBLISH_BROKER_ENABLED:
+            br.publish(br.TOPIC_SYS_INFO, sys_info_text)
 
-    if glb.DEVICE_SERIAL_NUMBER == '':
-        sys_info = json.loads(r.get(im.RK_SYS_INFO + str(glb.DEVICE_ID)))
-        for item in sys_info:
-            if "serialNumber" in item:
-                glb.DEVICE_SERIAL_NUMBER = item["serialNumber"]
-                break
-
+    
+    # if glb.DEVICE_SERIAL_NUMBER == '':
+    #     print('serial number []')
+    #     sys_info = json.loads(r.get(im.RK_SYS_INFO + str(glb.DEVICE_ID)))
+    #     for item in sys_info:
+    #         if "serialNumber" in item:
+    #             glb.DEVICE_SERIAL_NUMBER = item["serialNumber"]
+    #             break
 
     u.logmsg('[OK]  read_system_information')
 
@@ -327,56 +326,101 @@ def read_controller_settings(modbus):
     need_to_update = False
     if not r.exists(im.RK_SETTINGS + str(glb.DEVICE_ID)):
         need_to_update = True
-    else:        
-        if r.get(im.RK_SETTINGS + str(glb.DEVICE_ID)) == '':
+    else:  
+        if r.get(im.RK_SETTINGS + str(glb.DEVICE_ID)).decode('utf-8') == '':
             need_to_update = True
-    
+
     if need_to_update:
         reg = read_register(modbus, sr.addr_specialPowerControl)
 
+
+        eachNightOnFunctionEnabled = (True if (reg >> 8) & 0x01 else False)
+        specialPowerControlFunctionEnabled = True if (reg >> 9) & 0x01 else False
+        noChargingBelowZero = True if (reg & 0x0008) >> 2 else False
+        chargingMethod = 'PWM charging' if (reg >> 9) & 0x0003 else 'direct charging'
+
         settings = {
             "ts": time.time(),
-            'common': [
-                {'boostchargingRecoveryVoltage': read_register(modbus, sr.addr_boostchargingRecoveryVoltage), 'unit': glb.UNIT_VOLT },
-                {'overDischargeRecoveryVoltage': read_register(modbus, sr.addr_overDischargeRecoveryVoltage), 'unit': glb.UNIT_VOLT },
-                {'underVoltageWarningLevel': read_register(modbus, sr.addr_underVoltageWarningLevel), 'unit': glb.UNIT_VOLT },
-                {'overDischargeVoltage': read_register(modbus, sr.addr_overDischargeVoltage), 'unit': glb.UNIT_VOLT },
-                {'dischargingLimitVoltage': read_register(modbus, sr.addr_dischargingLimitVoltage), 'unit': glb.UNIT_VOLT },
-                {'overDischareTimeDelay': read_register(modbus, sr.addr_overDischareTimeDelay), 'unit': glb.UNIT_SECOND },
-                {'equalizingChargingTime': read_register(modbus, sr.addr_equalizingChargingTime), 'unit': glb.UNIT_MINUTE },
-                {'boostChargingTime': read_register(modbus, sr.addr_boostChargingTime), 'unit': glb.UNIT_MINUTE },
-                {'equalizingChargingInterval': read_register(modbus, sr.addr_equalizingChargingInterval), 'unit': glb.UNIT_DAY },
-                {'temperatureCompensationFactor': read_register(modbus, sr.addr_temperatureCompensationFactor), 'unit': glb.UNIT_MV },
-                {'loadWorkingMode': glb.workingModes[read_register(modbus, sr.addr_loadWorkingMode)], 'unit': glb.UNIT_STRING },
-            ],
-            'battery': [
-                {'nominalBatteryCapacity': read_register(modbus, sr.addr_nominalBatteryCapacity),  'unit': glb.UNIT_AH },
-                {'systemVoltageSetting': read_register(modbus, sr.addr_systemVoltageSetting) >> 8, 'unit': glb.UNIT_VOLT },
-                {'recognizedVoltage': read_register(modbus, sr.addr_batteryType) & 0x00FF, 'unit': glb.UNIT_VOLT },
-                {'batteryType': glb.batteryTypes[read_register(modbus, sr.addr_batteryType)], 'unit': glb.UNIT_STRING },
-                {'overVoltageThreshold': read_register(modbus, sr.addr_overVoltageThreshold), 'unit': glb.UNIT_VOLT },
-                {'chargingVoltageLimit': read_register(modbus, sr.addr_chargingVoltageLimit), 'unit': glb.UNIT_VOLT },
-                {'equalizingChargingVoltage': read_register(modbus, sr.addr_equalizingChargingVoltage), 'unit': glb.UNIT_VOLT },
-                {'boostchargingVoltage': read_register(modbus, sr.addr_boostchargingVoltage), 'unit': glb.UNIT_VOLT },
-                {'floatingChargingVoltage': read_register(modbus, sr.addr_floatingChargingVoltage), 'unit': glb.UNIT_VOLT }
-            ],
+            
+            'boostchargingRecoveryVoltage': read_register(modbus, sr.addr_boostchargingRecoveryVoltage),
+            'overDischargeRecoveryVoltage': read_register(modbus, sr.addr_overDischargeRecoveryVoltage),
+            'underVoltageWarningLevel': read_register(modbus, sr.addr_underVoltageWarningLevel),
+            'overDischargeVoltage': read_register(modbus, sr.addr_overDischargeVoltage),
+            'dischargingLimitVoltage': read_register(modbus, sr.addr_dischargingLimitVoltage),
+            'overDischareTimeDelay': read_register(modbus, sr.addr_overDischareTimeDelay),
+            'equalizingChargingTime': read_register(modbus, sr.addr_equalizingChargingTime),
+            'boostChargingTime': read_register(modbus, sr.addr_boostChargingTime),
+            'equalizingChargingInterval': read_register(modbus, sr.addr_equalizingChargingInterval),
+            'temperatureCompensationFactor': read_register(modbus, sr.addr_temperatureCompensationFactor),
+            'loadWorkingMode': glb.workingModes[read_register(modbus, sr.addr_loadWorkingMode)],
+            
+            'battery': {
+                'nominalBatteryCapacity': read_register(modbus, sr.addr_nominalBatteryCapacity),
+                'systemVoltageSetting': read_register(modbus, sr.addr_systemVoltageSetting) >> 8,
+                'recognizedVoltage': read_register(modbus, sr.addr_batteryType) & 0x00FF,
+                'batteryType': glb.batteryTypes[read_register(modbus, sr.addr_batteryType)],
+                'overVoltageThreshold': read_register(modbus, sr.addr_overVoltageThreshold),
+                'chargingVoltageLimit': read_register(modbus, sr.addr_chargingVoltageLimit),
+                'equalizingChargingVoltage': read_register(modbus, sr.addr_equalizingChargingVoltage),
+                'boostchargingVoltage': read_register(modbus, sr.addr_boostchargingVoltage),
+                'floatingChargingVoltage': read_register(modbus, sr.addr_floatingChargingVoltage)
+            },
+
             'lightControl': {
-                'common': [
-                    {'lightControlDelay': read_register(modbus, sr.addr_lightControlDelay), 'unit': glb.UNIT_MINUTE },
-                    {'lightControlVoltage': read_register(modbus, sr.addr_lightControlVoltage), 'unit': glb.UNIT_VOLT }
-                ],
-                'specialPowerControl': [
-                    {'eachNightOnFunctionEnabled': True if (reg >> 8) & 0x01 else False, 'unit': glb.UNIT_VOLT },
-                    {'specialPowerControlFunctionEnabled': True if (reg >> 9) & 0x01 else False, 'unit': glb.UNIT_VOLT },
-                    {'noChargingBelowZero': True if (reg & 0x0008) >> 2 else False, 'unit': glb.UNIT_VOLT },
-                    {'charging method': 'PWM charging' if (reg >> 9) & 0x0003 else 'direct charging', 'unit': glb.UNIT_VOLT }
-                ]
+                'lightControlDelay': read_register(modbus, sr.addr_lightControlDelay),
+                'lightControlVoltage': read_register(modbus, sr.addr_lightControlVoltage),
+                'specialPowerControl': {
+                    'eachNightOnFunctionEnabled': eachNightOnFunctionEnabled,
+                    'specialPowerControlFunctionEnabled': specialPowerControlFunctionEnabled,
+                    'noChargingBelowZero': noChargingBelowZero,
+                    'chargingMethod': chargingMethod,
+                }
             }
         }
+        # settings = {
+        #     "ts": time.time(),
+        #     'common': [
+        #         {'boostchargingRecoveryVoltage': read_register(modbus, sr.addr_boostchargingRecoveryVoltage), 'unit': glb.UNIT_VOLT },
+        #         {'overDischargeRecoveryVoltage': read_register(modbus, sr.addr_overDischargeRecoveryVoltage), 'unit': glb.UNIT_VOLT },
+        #         {'underVoltageWarningLevel': read_register(modbus, sr.addr_underVoltageWarningLevel), 'unit': glb.UNIT_VOLT },
+        #         {'overDischargeVoltage': read_register(modbus, sr.addr_overDischargeVoltage), 'unit': glb.UNIT_VOLT },
+        #         {'dischargingLimitVoltage': read_register(modbus, sr.addr_dischargingLimitVoltage), 'unit': glb.UNIT_VOLT },
+        #         {'overDischareTimeDelay': read_register(modbus, sr.addr_overDischareTimeDelay), 'unit': glb.UNIT_SECOND },
+        #         {'equalizingChargingTime': read_register(modbus, sr.addr_equalizingChargingTime), 'unit': glb.UNIT_MINUTE },
+        #         {'boostChargingTime': read_register(modbus, sr.addr_boostChargingTime), 'unit': glb.UNIT_MINUTE },
+        #         {'equalizingChargingInterval': read_register(modbus, sr.addr_equalizingChargingInterval), 'unit': glb.UNIT_DAY },
+        #         {'temperatureCompensationFactor': read_register(modbus, sr.addr_temperatureCompensationFactor), 'unit': glb.UNIT_MV },
+        #         {'loadWorkingMode': glb.workingModes[read_register(modbus, sr.addr_loadWorkingMode)], 'unit': glb.UNIT_STRING },
+        #     ],
+        #     'battery': [
+        #         {'nominalBatteryCapacity': read_register(modbus, sr.addr_nominalBatteryCapacity),  'unit': glb.UNIT_AH },
+        #         {'systemVoltageSetting': read_register(modbus, sr.addr_systemVoltageSetting) >> 8, 'unit': glb.UNIT_VOLT },
+        #         {'recognizedVoltage': read_register(modbus, sr.addr_batteryType) & 0x00FF, 'unit': glb.UNIT_VOLT },
+        #         {'batteryType': glb.batteryTypes[read_register(modbus, sr.addr_batteryType)], 'unit': glb.UNIT_STRING },
+        #         {'overVoltageThreshold': read_register(modbus, sr.addr_overVoltageThreshold), 'unit': glb.UNIT_VOLT },
+        #         {'chargingVoltageLimit': read_register(modbus, sr.addr_chargingVoltageLimit), 'unit': glb.UNIT_VOLT },
+        #         {'equalizingChargingVoltage': read_register(modbus, sr.addr_equalizingChargingVoltage), 'unit': glb.UNIT_VOLT },
+        #         {'boostchargingVoltage': read_register(modbus, sr.addr_boostchargingVoltage), 'unit': glb.UNIT_VOLT },
+        #         {'floatingChargingVoltage': read_register(modbus, sr.addr_floatingChargingVoltage), 'unit': glb.UNIT_VOLT }
+        #     ],
+        #     'lightControl': {
+        #         'common': [
+        #             {'lightControlDelay': read_register(modbus, sr.addr_lightControlDelay), 'unit': glb.UNIT_MINUTE },
+        #             {'lightControlVoltage': read_register(modbus, sr.addr_lightControlVoltage), 'unit': glb.UNIT_VOLT }
+        #         ],
+        #         'specialPowerControl': [
+        #             {'eachNightOnFunctionEnabled': True if (reg >> 8) & 0x01 else False, 'unit': glb.UNIT_VOLT },
+        #             {'specialPowerControlFunctionEnabled': True if (reg >> 9) & 0x01 else False, 'unit': glb.UNIT_VOLT },
+        #             {'noChargingBelowZero': True if (reg & 0x0008) >> 2 else False, 'unit': glb.UNIT_VOLT },
+        #             {'charging method': 'PWM charging' if (reg >> 9) & 0x0003 else 'direct charging', 'unit': glb.UNIT_VOLT }
+        #         ]
+        #     }
+        # }
         
         settings_text = json.dumps(settings)
 
         r.set(im.RK_SETTINGS + str(glb.DEVICE_ID), settings_text)
+        u.logmsg(f"[OK]     read_controller_settings")
         
         if glb.PUBLISH_BROKER_ENABLED:
             br.publish(br.TOPIC_SETTINGS, settings_text)

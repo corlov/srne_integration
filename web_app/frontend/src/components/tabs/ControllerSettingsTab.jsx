@@ -39,7 +39,7 @@ export default function ControllerSettingsTab({deviceSettings}) {
 
     
     if (deviceSettings) {    
-        console.log(deviceSettings)
+        //console.log(deviceSettings)
         const complexInfoDict = {
             'Общие настройки': '',
             'boostChargingTime': deviceSettings.boostChargingTime,                        
@@ -67,17 +67,36 @@ export default function ControllerSettingsTab({deviceSettings}) {
             'lightControl': '',
             'lightControlDelay': deviceSettings.lightControl.lightControlDelay,
             'lightControlVoltage': deviceSettings.lightControl.lightControlVoltage,
-            'charging method': deviceSettings.lightControl.specialPowerControl["charging method"],
-            'eachNightOnFunctionEnabled': deviceSettings.lightControl.specialPowerControl["eachNightOnFunctionEnabled"],
-            'noChargingBelowZero': deviceSettings.lightControl.specialPowerControl["noChargingBelowZero"] ? '1' : '0',
-            'specialPowerControlFunctionEnabled': deviceSettings.lightControl.specialPowerControl["specialPowerControlFunctionEnabled"] ? '1' : '0'
+            'charging method': deviceSettings.lightControl.specialPowerControl.chargingMethod,
+            'eachNightOnFunctionEnabled': deviceSettings.lightControl.specialPowerControl.eachNightOnFunctionEnabled ? 'да' : 'нет',
+            'noChargingBelowZero': deviceSettings.lightControl.specialPowerControl.noChargingBelowZero ? 'да' : 'нет',
+            'specialPowerControlFunctionEnabled': deviceSettings.lightControl.specialPowerControl.specialPowerControlFunctionEnabled ? 'да' : 'нет'
         };
+
+        function camelCaseToWords(str) {
+            // Добавляем пробелы перед заглавными буквами и преобразуем в lowercase
+            return str
+                .replace(/([A-Z])/g, ' $1')  // Добавляем пробелы перед заглавными буквами
+                .replace(/^./, str => str.toUpperCase())  // Первую букву делаем заглавной
+                .trim();
+        }
+
+        const transformedDict = {};
+        for (const [key, value] of Object.entries(complexInfoDict)) {
+            // Пропускаем уже отформатированные ключи (с пробелами или русские)
+            if (key.includes(' ') || /[а-яА-Я]/.test(key)) {
+                transformedDict[key] = value;
+            } else {
+                transformedDict[camelCaseToWords(key)] = value;
+            }
+        }
+
 
         return (
         <div className="split-root">       
             <main className="right-col" aria-label="Информация">
             <RightCard title="">            
-                <KeyValuePairs data={complexInfoDict}/>
+                <KeyValuePairs data={transformedDict}/>
             </RightCard>
             </main>
         </div>

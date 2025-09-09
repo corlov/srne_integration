@@ -53,21 +53,27 @@ RK_WIFI_ERROR_DETAILS = 'wifi_error_text_details'
 
 
 def redis_read(key_name, device_id="", additonal_params=""):
-    r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
-    
-    key = key_name + str(device_id) + additonal_params
-    payload = ''
-    if r.exists(key):
-        payload = r.get(key)
-        return json.loads(payload)
-
+    try:
+        r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
+        key = key_name + str(device_id) + additonal_params
+        payload = ''
+        if r.exists(key):
+            payload = r.get(key)
+            return json.loads(payload)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return ''
     return ''
 
 
 def redis_read_v(key_name):
-    r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
-    if r.exists(key_name):        
-        return r.get(key_name)
+    try:
+        r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
+        if r.exists(key_name):        
+            return r.get(key_name)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return ''
     return ''
 
 
@@ -296,6 +302,93 @@ def params_log():
 
 
 
+
+# журнал того что во внутренней памяти самого контроллера СП лежит
+@app.route('/controller_internal_log', methods=['GET'])
+def controller_internal_log():
+    # FIXME: в настройки пароли убрать
+    connection_params = {
+        'host': 'localhost',
+        'database': 'solar_controller_telemetry',
+        'user': 'postgres',
+        'password': 'gen_postgress_password',
+        'port': '5432'
+    }
+
+    # FIXME: non secure!
+    start_d = request.args.get("start_date")
+    end_d = request.args.get("end_date")
+    limit = request.args.get("limit", type=int)
+
+    if not start_d:
+        start_d = datetime.datetime.now().strftime('%Y-%m-%d')
+
+    if not end_d:
+        end_d = datetime.datetime.now().strftime('%Y-%m-%d')
+
+    # Build timestamp strings
+    start_d = f"{start_d} 00:00:00"
+    end_d   = f"{end_d} 23:59:59"
+
+    
+    print('3', limit, start_d, end_d)
+    
+    try:
+        conn = psycopg2.connect(**connection_params)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            select
+                to_char(actual_date, 'YYYY-MM-DD HH24:MI:SS') as actual_date,
+                payload->'currentDayMinBatteryVoltage' as currentDayMinBatteryVoltage,
+                payload->'maxBatteryVoltage' as maxBatteryVoltage,
+                payload->'maxChargingCurrent' as maxChargingCurrent,
+                payload->'maxDischargingCurrent' as maxDischargingCurrent,
+                payload->'maxChargingPower' as maxChargingPower,
+                payload->'maxDischargingPower' as maxDischargingPower,
+                payload->'chargingAmpHrs' as chargingAmpHrs,
+                payload->'dischargingAmpHrs' as dischargingAmpHrs,
+                payload->'powerGeneration' as powerGeneration,
+                payload->'powerConsumption' as powerConsumption
+            from solar_controller_telemetry.device.history h
+            where
+                actual_date between %(start_d)s and %(end_d)s
+            order by actual_date desc 
+            limit %(limit)s;
+        """, {"limit": limit, "start_d": start_d, "end_d": end_d})
+        columns = [desc[0] for desc in cursor.description]
+        rows = cursor.fetchall()
+        result = []
+        for row in rows:
+            item = {}
+            for i, column in enumerate(columns):
+                item[column] = row[i]
+            result.append(item)
+
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': result,
+            'total': len(result)
+        })
+
+
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+    
+    return {}
+
+
+
+
+
 @app.route('/events_log', methods=['GET'])
 def events_log():
     # FIXME: в настройки пароли убрать
@@ -497,6 +590,24 @@ def event_log_add(descr, name, type, severity):
         conn.commit()
 
 
+
+@app.route('/clear_events_log')
+def clear_events_log():
+    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("truncate device.event_log")
+        conn.commit()
+    return jsonify(message='OK')
+
+
+
+@app.route('/clear_params_log')
+def clear_params_log(clear_events_log):
+    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("truncate device.dynamic_information")
+        conn.commit()
+    return jsonify(message='OK')
+
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json
@@ -653,6 +764,8 @@ def events_wifi_status():
 
 
 
+
+
 def get_complex_settings():
     # FIXME: в настройки пароли убрать
     connection_params = {
@@ -686,6 +799,7 @@ def get_complex_settings():
 
 @app.route('/update_status/<device_id>')
 def update_status(device_id):
+    print(f'================ update_status ========')
     def generate_update_events(device_id):
         while True:
             print(f'EVENT: update_status, dev_id: {device_id}')
@@ -716,7 +830,7 @@ def update_status(device_id):
     token = request.args.get('Authorization')
     if not token:
         return jsonify(message='Token is missing!')
-
+    print(f'Token: {token}')
     try:
         data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         #device_id = request.args.get('deviceId')
@@ -728,6 +842,100 @@ def update_status(device_id):
         return jsonify(message='Invalid token!')
 
 
+
+@app.route("/api/controller-temp")
+def controller_temp():
+    """
+    Query params:
+      - range: e.g. '7d' (default) or '24h'
+      - downsample: integer minutes to bucket points (optional, e.g. 15)
+      - limit: max raw points when no downsample (optional)
+    Returns JSON array: [{ "x": ISO8601, "y": int }, ...]
+    """
+    rng = request.args.get("range", "7d")
+    downsample = request.args.get("downsample", type=int)
+    limit = request.args.get("limit", type=int, default=10000)
+
+    # parse range
+    now = datetime.datetime.now(datetime.timezone.utc)
+    if rng.endswith("d"):
+        hours = int(rng[:-1]) * 24
+    elif rng.endswith("h"):
+        hours = int(rng[:-1])
+    else:
+        hours = 24 * 7
+    start = now - datetime.timedelta(hours=hours)
+
+    
+    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        if downsample and downsample > 0:
+            # bucket by downsample minutes using date_trunc on minutes and integer division
+            sql = """
+                SELECT
+                to_char(date_trunc('minute', di.created_at AT TIME ZONE 'UTC')
+                        + make_interval(mins => (floor(date_part('minute', di.created_at AT TIME ZONE 'UTC') / %s) * %s)),
+                        'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS ts,
+                AVG((di.payload -> 'controller' ->> 'temperature')::numeric) AS avg_temp
+                FROM device.dynamic_information di
+                WHERE di.payload ? 'controller'
+                AND (di.payload -> 'controller') ? 'temperature'
+                AND di.created_at >= %s
+                GROUP BY ts
+                ORDER BY ts;
+            """
+            cur.execute(sql, (downsample, downsample, start))
+            rows = cur.fetchall()
+            data = rows
+        else:
+            sql = """
+                	select 
+                        *
+                    from
+                    (
+                    SELECT 
+                            (di.created_at AT TIME ZONE 'UTC')::date AS ts,
+                            avg((di.payload -> 'controller' ->> 'temperature')::int) AS controller_temperature,
+                            avg((di.payload -> 'battery' ->> 'temperature')::int) AS battery_temperature,
+                            avg((di.payload -> 'battery' ->> 'volts')::float) AS battery_volts
+                    FROM device.dynamic_information di
+                    WHERE 
+                        di.payload ? 'controller' 
+                        AND (di.payload -> 'controller') ? 'temperature'
+                        AND di.payload ? 'battery' 
+                        AND (di.payload -> 'battery') ? 'temperature'
+                        AND (di.payload -> 'battery') ? 'volts'
+                    group by ts	
+                    ORDER BY ts
+                    ) as t1
+                    join
+                    (
+                    select
+                        h.actual_date::date as ts,
+                        avg((h.payload->'maxBatteryVoltage')::int) as maxv,
+                        avg((h.payload->'currentDayMinBatteryVoltage')::int) as minv
+                    from device.history h
+                    group by h.actual_date::date 	
+                    ORDER BY h.actual_date::date
+                    ) as t2 on t1.ts = t2.ts
+            """
+            cur.execute(sql)
+            rows = cur.fetchall()
+            controller_temperature = [{"x": r["ts"], "y": r["controller_temperature"]} for r in rows]
+            battery_temperature = [{"x": r["ts"], "y": r["battery_temperature"]} for r in rows]
+            battery_volts = [{"x": r["ts"], "y": r["battery_volts"]} for r in rows]
+            maxv = [{"x": r["ts"], "y": r["maxv"]} for r in rows]
+            minv = [{"x": r["ts"], "y": r["minv"]} for r in rows]
+            data = {
+                'controller_temperature': controller_temperature,
+                'battery_temperature': battery_temperature,
+                'battery_volts': battery_volts,
+                'maxv': maxv,
+                'minv': minv
+            }
+
+        return jsonify(data)
+
+    
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5011)

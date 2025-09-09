@@ -3,7 +3,7 @@ import { backendEndpoint } from '../../global_consts/Backend'
 import '../../assets/styles/Table.css'
 import "../../assets/styles/ItemsTable.css"
 
-const ParamsLogTab = () => {
+const ControllerInternalHistoryLogTab = () => {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -22,7 +22,7 @@ const ParamsLogTab = () => {
       if (limit !== "" && limit !== null) params.append("limit", limit);
 
       
-      const res = await fetch(`${backendEndpoint}/params_log?${params.toString()}`);
+      const res = await fetch(`${backendEndpoint}/controller_internal_log?${params.toString()}`);
       
       
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -44,51 +44,13 @@ const ParamsLogTab = () => {
   const onApply = () => fetchItems();
 
 
-  // const onClear = () => {
-  //   setStartDate("");
-  //   setEndDate("");
-  //   setLimit(10);
-  //   setItems([]);
-  // };
-
-
-  const clearLog = async () => {
-    setLoading(true);
-    setError(null);
-    try {      
-      const res = await fetch(`${backendEndpoint}/clear_params_log`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      console.log(data)
-    } catch (e) {
-      setError(e.message || "Ошибка");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-
   const onClear = () => {
-    setShowConfirmModal(true);
-  };
-
-  const handleConfirmClear = () => {
-    clearLog();
-
     setStartDate("");
     setEndDate("");
     setLimit(10);
-    
-    // остальные set-функции
-    setShowConfirmModal(false);
     setItems([]);
   };
 
-  const handleCancelClear = () => {
-    setShowConfirmModal(false);
-  };
 
 
   const onExport = () => {
@@ -128,70 +90,10 @@ const ParamsLogTab = () => {
     URL.revokeObjectURL(url);
   };
 
+  console.log(items)
 
   return (
     <>
-
-{showConfirmModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            minWidth: '300px'
-          }}>
-            <h3 style={{ marginTop: 0, color: '#333' }}>Подтверждение</h3>
-            <p style={{ margin: '15px 0', color: '#666' }}>Вы уверены, что хотите очистить Журнал?</p>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '10px',
-              marginTop: '20px'
-            }}>
-              <button 
-                onClick={handleCancelClear}
-                style={{
-                  padding: '8px 16px',
-                  border: 'none',
-                  borderRadius: '4px',
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  cursor: 'pointer'
-                }}
-              >
-                Отмена
-              </button>
-              <button 
-                onClick={handleConfirmClear}
-                style={{
-                  padding: '8px 16px',
-                  border: 'none',
-                  borderRadius: '4px',
-                  backgroundColor: '#dc3545',
-                  color: 'white',
-                  cursor: 'pointer'
-                }}
-              >
-                Очистить
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-
 
 
     <div className="items-table__wrap">
@@ -237,9 +139,6 @@ const ParamsLogTab = () => {
           <button className="btn btn--blue btn--fixed" onClick={onExport}>
             Экспорт
           </button>
-          <button className="btn btn--blue btn--fixed" onClick={onClear}>
-            Очистить журнал
-          </button>
         </div>
       </div>
 
@@ -251,14 +150,16 @@ const ParamsLogTab = () => {
           <thead>
             <tr>
               <th>Дата</th>
-              <th>U панели, В</th>
-              <th>U АКБ, В</th>
-              <th>Уровень заряда АКБ, %</th>
-              <th>Ток нагрузки, А</th>
-              <th>Энергия потребленная, Вт</th>
-              <th>Режим заряда</th>
-              <th>Нагрузка</th>
-              <th>t, °C</th>
+              <th>currentDayMinBatteryVoltage</th>
+              <th>maxBatteryVoltage</th>
+              <th>maxChargingCurrent</th>
+              <th>maxDischargingCurrent</th>
+              <th>maxChargingPower</th>
+              <th>maxDischargingPower</th>
+              <th>chargingAmpHrs</th>
+              <th>dischargingAmpHrs</th>
+              <th>powerGeneration</th>
+              <th>powerConsumption</th>
             </tr>
           </thead>
           <tbody>
@@ -268,16 +169,18 @@ const ParamsLogTab = () => {
               </tr>
             ) : (
               items.map((it) => (
-                <tr key={it.created_at}>
-                  <td>{it.created_at}</td>
-                  <td>{it.panel_volts}</td>
-                  <td>{it.battery_volts}</td>
-                  <td>{it.battery_stateOfCharge}</td>
-                  <td>{it.load_amps}</td>
-                  <td>{it.load_dailyPower}</td>
-                  <td>{it.controller_chargingMode}</td>
-                  <td>{it.load_state}</td>
-                  <td>{it.controller_temperature}</td>
+                <tr key={it.actual_date}>
+                <td>{it.actual_date}</td>
+                <td>{it.currentdayminbatteryvoltage}</td>
+                <td>{it.maxbatteryvoltage}</td>
+                <td>{it.maxchargingcurrent}</td>
+                <td>{it.maxdischargingcurrent}</td>
+                <td>{it.maxchargingpower}</td>
+                <td>{it.maxdischargingpower}</td>
+                <td>{it.chargingamphrs}</td>
+                <td>{it.dischargingAmpHrs}</td>
+                <td>{it.powergeneration}</td>
+                <td>{it.powerconsumption}</td>
                 </tr>
               ))
             )}
@@ -289,4 +192,4 @@ const ParamsLogTab = () => {
   );
 };
 
-export default ParamsLogTab;
+export default ControllerInternalHistoryLogTab;

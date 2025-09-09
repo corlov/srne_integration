@@ -7,7 +7,10 @@ import EventsLogTab from "./tabs/EventsLogTab";
 import ParamsLogTab from "./tabs/ParamsLogTab";
 import SettingsTab from "./tabs/SettingsTab";
 import SysInfoTab from "./tabs/SysInfoTab";
+import ChartsTab from "./tabs/ChartsTab";
 import ControllerSettingsTab from "./tabs/ControllerSettingsTab";
+import ControllerInternalHistoryLogTab from "./tabs/ControllerInternalHistoryLog";
+
 import "../assets/styles/tabs.css";
 
 
@@ -129,7 +132,16 @@ export default function TabsPage({
                       Настройки контроллера
                     </NavLink>
                   </li>
-
+                  <li>
+                    <NavLink to="charts" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+                      Графики
+                    </NavLink>
+                  <li>
+                    <NavLink to="internal_log" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+                      Журнал из внутренней памяти
+                    </NavLink>
+                  </li>
+                  </li>
                 </ul>
               ) : null}
             </nav>
@@ -153,6 +165,8 @@ export default function TabsPage({
               <Route path="settings" element={<SettingsTab />} />
               <Route path="system_info" element={<SysInfoTab deviceSystemInfo={deviceSystemInfo}/>} />
               <Route path="controller_settings" element={<ControllerSettingsTab deviceSettings={deviceSettings}/>} />
+              <Route path="charts" element={<ChartsTab />} />
+              <Route path="internal_log" element={<ControllerInternalHistoryLogTab />} />
             </Routes>
           </main>
         </div>

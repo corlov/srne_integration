@@ -22,7 +22,14 @@ def clean_db():
         conn.commit()
         cursor.execute("delete from device.command_history where created_at < NOW() - INTERVAL '14 days'")
         conn.commit()
-        
+        cursor.execute("DELETE FROM device.eeprom_parameter_setting WHERE created_at < NOW() - INTERVAL '14 days' AND created_at < (SELECT MAX(created_at) FROM device.eeprom_parameter_setting)")
+        conn.commit()
+        cursor.execute("DELETE FROM device.event_log WHERE created_at < NOW() - INTERVAL '365 days'")
+        conn.commit()
+        cursor.execute("delete from device.history where created_at < NOW() - INTERVAL '1024 days'")
+        conn.commit()
+
+
         cursor.close()
         conn.close()
 

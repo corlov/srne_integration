@@ -3,7 +3,6 @@ import "../../assets/styles/SplitPage.css";
 import "../../assets/styles/KeyValuePairs.css";
 
 
-
 function RightCard({ title, children }) {
   return (
     <section className="card">
@@ -48,9 +47,9 @@ export default function SysInfoTab({deviceSystemInfo}) {
         return (
         <div className="split-root">       
             <main className="right-col" aria-label="Информация">
-            <RightCard title="">            
-                <KeyValuePairs data={complexInfoDict}/>
-            </RightCard>
+                <RightCard title="">            
+                    <KeyValuePairs data={complexInfoDict}/>
+                </RightCard>
             </main>
         </div>
         );

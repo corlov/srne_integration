@@ -7,7 +7,7 @@ MAIN_LOG_FILE = 'solar_monitor.log'
 PG_CONNECT_PARAMS = { 'dbname': 'solar_controller_telemetry', 'user': 'postgres', 'password': 'gen_postgress_password', 'host': '127.0.0.1', 'port': '5432' }
 
 # Number of seconds to wait in between requests to the charge controller.
-DELAY_BETWEEN_REQUESTS = 7
+DELAY_BETWEEN_REQUESTS = 600
 DELAY_BETWEEN_COMMANDS = 2
 
 CLEANUP_LIMIT = DELAY_BETWEEN_COMMANDS * 100
@@ -96,4 +96,4 @@ batteryTypes = [
 ]
 
 # отправлять данные в брокер или нет
-PUBLISH_BROKER_ENABLED = True
+PUBLISH_BROKER_ENABLED = False
