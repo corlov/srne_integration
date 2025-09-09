@@ -37,17 +37,11 @@ PIN_IN_WIFI_BUTTON = 18
 PinsOut = [PIN_OUT_K2_TRAFFICLIGHT, PIN_OUT_K3_LAMP, PIN_OUT_K4_MODEM]
 PinsIn = [PIN_IN_WIFI_BUTTON, PIN_IN_CABINET_OPEN_DOOR_BUTTON]
 
-
-def init_pins():
-    GPIO.setmode(GPIO.BOARD)
-
-    for pin in PinsOut:
-        GPIO.setup(pin, GPIO.OUT)
-
-    # GPIO.PUD_UP = state (HIGH) when the button is not pressed
-    GPIO.setup(PIN_IN_CABINET_OPEN_DOOR_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    # GPIO.PUD_DOWN = state (HIGH) when the button is pressed
-    GPIO.setup(PIN_IN_WIFI_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+output_pins_state = {
+    PIN_OUT_K2_TRAFFICLIGHT: GPIO.LOW,
+    PIN_OUT_K3_LAMP: GPIO.LOW,
+    PIN_OUT_K4_MODEM: GPIO.LOW
+}
 
 
 def get_conn():
@@ -71,6 +65,21 @@ def event_log_add(descr, name, type, severity):
         conn.commit()
 
 
+
+def init_pins():
+    GPIO.setmode(GPIO.BOARD)
+
+    for pin in PinsOut:
+        GPIO.setup(pin, GPIO.OUT)
+
+    # GPIO.PUD_UP = state (HIGH) when the button is not pressed
+    GPIO.setup(PIN_IN_CABINET_OPEN_DOOR_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    # GPIO.PUD_DOWN = state (HIGH) when the button is pressed
+    GPIO.setup(PIN_IN_WIFI_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    event_log_add('Инициализация пинов', 'gpio', 'EVENT', 'DEBUG')
+
+
+
 def main():
     init_pins()
 
@@ -80,10 +89,15 @@ def main():
     prev_opend_door_state = GPIO.input(PIN_IN_CABINET_OPEN_DOOR_BUTTON)
     prev_wifi_btn_state = GPIO.input(PIN_IN_WIFI_BUTTON)
 
+    prev_time = time.time()
     try:
         while True:
             # Small delay to debounce
             time.sleep(0.2)
+
+            if time.time() - prev_time > 5*60:
+                event_log_add('Тест связи', 'gpio', 'EVENT', 'DEBUG')
+                prev_time = time.time()
 
             r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
 
@@ -92,6 +106,7 @@ def main():
                 redis_pin_name = f'GPIO.{pin}'
                 state = GPIO.input(pin)
                 print(f'{redis_pin_name}: {state}')
+
                 if state == GPIO.LOW:
                     r.set(redis_pin_name, 0)
                 else:
@@ -99,15 +114,15 @@ def main():
 
                 if pin == PIN_IN_WIFI_BUTTON and state == GPIO.HIGH and prev_wifi_btn_state == GPIO.LOW:
                     r.set(RK_WIFI_ON_REQ, 1)
-                    event_log_add('on', 'wifi button', 'EVENT', 'INFO')
+                    event_log_add('on', 'gpio: wifi button', 'EVENT', 'INFO')
                 if pin == PIN_IN_WIFI_BUTTON and state == GPIO.LOW and prev_wifi_btn_state == GPIO.HIGH:
                     r.set(RK_WIFI_ON_REQ, 1)
-                    event_log_add('off', 'wifi button', 'EVENT', 'INFO')
+                    event_log_add('off', 'gpio: wifi button', 'EVENT', 'INFO')
 
                 if pin == PIN_IN_CABINET_OPEN_DOOR_BUTTON and state == GPIO.HIGH and prev_opend_door_state == GPIO.LOW:
-                    event_log_add('Открыта дверь шкафа', 'дверь шкафа', 'EVENT', 'INFO')
+                    event_log_add('Открыта дверь шкафа', 'gpio: дверь шкафа', 'EVENT', 'INFO')
                 if pin == PIN_IN_CABINET_OPEN_DOOR_BUTTON and state == GPIO.LOW and prev_opend_door_state == GPIO.HIGH:
-                    event_log_add('Закрыта дверь шкафа', 'дверь шкафа', 'EVENT', 'INFO')
+                    event_log_add('Закрыта дверь шкафа', 'gpio: дверь шкафа', 'EVENT', 'INFO')
                     
             prev_opend_door_state = GPIO.input(PIN_IN_CABINET_OPEN_DOOR_BUTTON)
             prev_wifi_btn_state = GPIO.input(PIN_IN_WIFI_BUTTON)
@@ -120,6 +135,11 @@ def main():
                 
                 if r.exists(redis_pin_name):
                     state = r.get(f'GPIO.{pin}')
+
+                    if output_pins_state[pin] != state:
+                        #event_log_add(f'Смена состояния pin({pin}) {output_pins_state[pin]} -> {state}', 'gpio', 'EVENT', 'DEBUG')
+                        output_pins_state[pin] = state
+
                     if int(state):
                         GPIO.output(pin, GPIO.HIGH)
                     else:

@@ -39,6 +39,16 @@ def get_conn():
 
 
 
+# ERROR EVENT
+# DEBUG INFO WARNING ERROR
+def event_log_add(descr, name, type, severity):
+    # FIXME: try except
+    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("insert into device.event_log (event_type, event_name, description, severity) values (%s, %s, %s, %s)", (type, name, descr, severity, ))
+        conn.commit()
+
+
+
 def get_actual_mode():
     with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
         cur.execute("select value from device.complex_settings cs where param = 'trafficlight_work_mode'")
@@ -82,6 +92,8 @@ def main():
     voltage = float(data['battery']['volts'])
     hold_prev_voltage = False
 
+    current_mode = mode
+
     while True:
         k += 1
         time.sleep(0.001)
@@ -89,7 +101,10 @@ def main():
             mode = get_actual_mode()
             print(mode)
             k = 0
+            if current_mode != mode:
+                event_log_add(f'Смена режима {current_mode} -> {mode}', 'trafficlight control daemon', 'EVENT', 'WARNING')
 
+        # изменяем режим только если не включен спец. режим гистерезиса, когда нужно помнить из какого напряжения попали в текущее
         if not hold_prev_voltage:
             prev_voltage = voltage
         data = redis_read(RK_TELEMETRY, device_id)
@@ -110,7 +125,10 @@ def main():
                 # зависит от того с какой стороны попали в диапазон - гистерезис
                 # если было меньше 10.8 и зашло в диапазон, но 2, если 
                 # было больше 11.2 и попало в диапазон, то 1
-                hold_prev_voltage = True
+                if not hold_prev_voltage:
+                    hold_prev_voltage = True
+                    event_log_add(f'Режим гистерезиса', 'trafficlight control daemon', 'EVENT', 'WARNING')
+
                 if prev_voltage < LOW_VOLTAGE:
                     economy_blink()
                 elif prev_voltage < LOW_VOLTAGE:
@@ -119,5 +137,11 @@ def main():
                     economy_blink()
         elif mode == MODE_4:
             r.set(f'GPIO.{PIN_OUT_K2_TRAFFICLIGHT}', 0)
+        else:
+            event_log_add(f'Нераспознаный режим {mode}', 'trafficlight control daemon', 'ERROR', 'ERROR')
+
+        current_mode = mode
+
+
 
 main()

@@ -16,7 +16,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 
 # Define a health check
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python3 health_check.sh
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python3 health_check.py
 
 # Command to run the application
 CMD ["python3", "solar_monitor.py"]

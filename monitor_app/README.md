@@ -5,11 +5,11 @@
 
 Удаление старого образа (если это необходимо)
         остановить конткейнер
-        docker stop e3083d82db1f
+            docker stop e3083d82db1f
         удалить контейнер
-        docker rm e3083d82db1f
+            docker rm e3083d82db1f
         удалить образ 
-        docker rmi solar-monitor:latest
+            docker rmi solar-monitor:latest
 
 Сборка (производится строг на Репке Пи либо если на машине с архитектурой отличной от репки (arm64),  нужно при сборке это указывать):
 Из минусов - на репке собирается долго образ:
@@ -43,6 +43,25 @@
         -e REDIS_HOST=192.168.1.193 \
         -e REDIS_PORT=6379 \
         -e PUBLISH_BROKER_ENABLED=true \
+        -e MQTT_SERVER_ADDR=192.168.1.199 \
+        -e MQTT_PORT=1883 \
+        -e MQTT_USER=srne_user \
+        -e MQTT_PASS=qwe123 \
+        solar-monitor:latest
+        
+    или
+
+    docker run -d --restart=always --name solar-monitor-service --device=/dev/ttyS0 \
+        -e DEVICE_ID=2 \
+        -e DEVICE_SYS_ADDR='/dev/ttyS0' \
+        -e DB_HOST=192.168.1.83 \
+        -e DB_PORT=5432 \
+        -e DB_USER=postgres \
+        -e DB_PASSWORD=gen_postgress_password \
+        -e DB_NAME=solar_controller_telemetry \
+        -e REDIS_HOST=192.168.1.83 \
+        -e REDIS_PORT=6379 \
+        -e PUBLISH_BROKER_ENABLED=false \
         -e MQTT_SERVER_ADDR=192.168.1.199 \
         -e MQTT_PORT=1883 \
         -e MQTT_USER=srne_user \

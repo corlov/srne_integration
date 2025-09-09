@@ -26,11 +26,14 @@ def send2device(addr, value):
             result = modbus.write_register(addr, value, slave=glb.DEVICE_ID)
             modbus.close()
         else:
+            db.event_log_add("send2device, Failed to connect to Modbus server INIT", 'controller monitor', 'ERROR', 'ERROR')
             return False, "Failed to connect to Modbus server INIT"
     except Exception as e:
+        db.event_log_add("send2device, Error modbus: " + str(e), 'controller monitor', 'ERROR', 'ERROR')
         return False, "Error modbus: " + str(e)
 
     if result.isError():
+        db.event_log_add("send2device, Error writing to register: " + str(result), 'controller monitor', 'ERROR', 'ERROR')
         return False, "Error writing to register: " + str(result)
     
     return True, ''
@@ -50,12 +53,14 @@ def get_external_command():
             return ''
     except Exception as e:
         u.logmsg(f"get_external_command, An error occurred: {e}", u.L_ERROR)
+        db.event_log_add('get_external_command, An error occurred', 'controller monitor', 'ERROR', 'ERROR')
         return None
 
 
 
 def set_parameters(parameters):
     if len(parameters) != 16:
+        db.event_log_add('set_parameters: incorect params count', 'controller monitor', 'ERROR', 'ERROR')
         return False, "incorect params count"
 
     for i in range(0, 10):
@@ -108,6 +113,7 @@ def set_parameters(parameters):
             data = ser.read(size=8)
             u.logmsg(f"Received: {data}, {data.hex()}")
             if not data:
+                db.event_log_add('set_parameters: No response from device', 'controller monitor', 'ERROR', 'ERROR')
                 return False, "No response from device"
             
             u.logmsg(data[0], data[1], data[2], data[3], data[4], data[5])
@@ -139,9 +145,11 @@ def exec_special_command(special_cmd_code):
             data = ser.read(size=8)
             u.logmsg(f"Received: {data}, {data.hex()}")
             if not data:
+                db.event_log_add('exec_special_command: No response from device', 'controller monitor', 'ERROR', 'ERROR')
                 return False, "No response from device"
             
             if data != raw_data:
+                db.event_log_add('exec_special_command: Response from device isnt OK', 'controller monitor', 'ERROR', 'ERROR')
                 return False, "Response from device isn't OK"
     except Exception as e:
         u.logmsg(e)

@@ -11,6 +11,20 @@ import inmemory as im
 
 
 
+def event_log_add(descr, name, type, severity):
+    try:
+        conn = psycopg2.connect(**glb.PG_CONNECT_PARAMS)
+        cur = conn.cursor()
+        cur.execute("insert into device.event_log (event_type, event_name, description, severity) values (%s, %s, %s, %s)", (type, name, descr, severity, ))
+        conn.commit()        
+        cur.close()
+        conn.close()
+    except Exception as e:
+        u.logmsg(f"load_history_to_redis, Error occurred: {str(e)}", u.L_ERROR)     
+
+
+
+
 def clean_db():
     try:
         conn = psycopg2.connect(**glb.PG_CONNECT_PARAMS)
@@ -88,6 +102,7 @@ def store_cmd(command):
         if conn:
             conn.close()
     return new_id
+
 
 
 

@@ -7,6 +7,7 @@ import uuid
 import os
 import psycopg2
 from psycopg2 import sql
+import psycopg2.extras
 
 
 REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
@@ -33,6 +34,25 @@ def is_connected(redis_client):
         return False
 
 
+def get_conn():
+    # FIXME: в настройки пароли убрать
+    connection_params = {
+        'host': 'localhost',
+        'database': 'solar_controller_telemetry',
+        'user': 'postgres',
+        'password': 'gen_postgress_password',
+        'port': '5432'
+    }
+
+    return psycopg2.connect(**connection_params)
+
+
+
+def event_log_add(descr, name, type, severity):
+    # FIXME: try except
+    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("insert into device.event_log (event_type, event_name, description, severity) values (%s, %s, %s, %s)", (type, name, descr, severity, ))
+        conn.commit()
 
 
 def run_command(command: str) -> str:
@@ -116,6 +136,7 @@ def send_activate_wifi_cmd(wifi_on):
 def main():
     global r
 
+    event_log_add('запуск демона', 'wifi', 'EVENT', 'INFO')
     ts_activate_ts = 0
 
     if r.exists(RK_WIFI_TS):
@@ -146,6 +167,7 @@ def main():
                     r.set(RK_WIFI_TS, ts_activate_ts)
                     r.set(RK_WIFI_ON_REQ, 0)
                     send_activate_wifi_cmd(True)
+                    event_log_add('включение', 'wifi', 'EVENT', 'INFO')
             else:
                 r.set(RK_WIFI_ON_REQ, 0)
 
@@ -162,6 +184,7 @@ def main():
                     r.set(RK_WIFI_OFF_REQ, 0)
                     send_activate_wifi_cmd(False)
                     ts_activate_ts = 0
+                    event_log_add('отключение', 'wifi', 'EVENT', 'INFO')
             else:
                 r.set(RK_WIFI_OFF_REQ, 0)
     finally:

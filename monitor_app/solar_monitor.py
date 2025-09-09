@@ -174,6 +174,7 @@ def run():
             elif command_str:
                 command = json.loads(command_str)
                 u.logmsg(f"command: {command}")
+                db.event_log_add(f'Received command, {command}', 'controller monitor', 'EVENT', 'DEBUG')
                 id = db.store_cmd(command)
                 if id:
                     status, err_text = exec_command(command)

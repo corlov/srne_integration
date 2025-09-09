@@ -61,6 +61,16 @@ def get_conn():
 
 
 
+# ERROR EVENT
+# DEBUG INFO WARNING ERROR
+def event_log_add(descr, name, type, severity):
+    # FIXME: try except
+    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("insert into device.event_log (event_type, event_name, description, severity) values (%s, %s, %s, %s)", (type, name, descr, severity, ))
+        conn.commit()
+
+
+
 def get_actual_mode():
     with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
         cur.execute("select value from device.complex_settings cs where param = 'load_work_mode'")
@@ -113,33 +123,43 @@ def set_working_mode(mode):
         cmd['value'] = mode
         r.set('command' + str(device_id), json.dumps(cmd))
     else:
-        print('error mode')
-    
+        event_log_add(f'Нераспознаный режим работы контроллера СП {mode}', 'lamp control daemon', 'ERROR', 'ERROR')
+        
+
+
+def apply_mode(mode_complex, mode_controller):
+    if mode_complex == MODE_1:
+        set_working_mode(mode_controller)
+        r.set(f'GPIO.{PIN_OUT_K3_LAMP}', 1)
+    elif mode_complex == MODE_2:
+        r.set(f'GPIO.{PIN_OUT_K3_LAMP}', 0)
+        set_working_mode(15)
+        load_control(0)
+    elif mode_complex == MODE_3:
+        r.set(f'GPIO.{PIN_OUT_K3_LAMP}', 1)
+        set_working_mode(15)
+        load_control(1)
+    else:
+        event_log_add(f'Нераспознаный режим {mode_complex}', 'lamp control daemon', 'ERROR', 'ERROR')
+
 
 
 def main():
-    k = 0
     mode_complex, mode_controller = get_actual_mode()
-    
+    apply_mode(mode_complex, mode_controller)
+    current_mode = mode_complex
     while True:
-        k += 1
         time.sleep(1)
-        if k > 2:
-            mode_complex, mode_controller = get_actual_mode()
-            print(mode_complex, mode_controller)
-            k = 0
 
-        if mode_complex == MODE_1:
-            set_working_mode(mode_controller)
-            r.set(f'GPIO.{PIN_OUT_K3_LAMP}', 1)
-        elif mode_complex == MODE_2:
-            r.set(f'GPIO.{PIN_OUT_K3_LAMP}', 0)
-            set_working_mode(15)
-            load_control(0)
-        elif mode_complex == MODE_3:
-            r.set(f'GPIO.{PIN_OUT_K3_LAMP}', 1)
-            set_working_mode(15)
-            load_control(1)
-            
+        mode_complex, mode_controller = get_actual_mode()
+        print(mode_complex, mode_controller)
+        if current_mode != mode_complex:
+            event_log_add(f'Смена режима {current_mode} -> {mode_complex}', 'lamp control daemon', 'EVENT', 'WARNING')
+            apply_mode(mode_complex, mode_controller)
+
+        current_mode = mode_complex
+
+
+
 main()
 

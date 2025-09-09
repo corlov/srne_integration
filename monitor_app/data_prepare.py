@@ -98,6 +98,7 @@ def read_dynamic_payload(modbus):
         r.set(im.RK_TELEMETRY + str(glb.DEVICE_ID), payload)
     except Exception as e:
         u.logmsg(f"read_dynamic_payload, An error occurred: {e}", u.L_ERROR)
+        db.event_log_add(f"read_dynamic_payload, read_dynamic_payload, An error occurred: {e}", 'controller monitor', 'ERROR', 'ERROR')
         return
 
 
@@ -120,6 +121,7 @@ def read_dynamic_payload(modbus):
         conn.close()
     except Exception as e:
         u.logmsg(f"An error occurred: {e}", u.L_ERROR)
+        db.event_log_add(f"read_dynamic_payload, {e}", 'controller monitor', 'ERROR', 'ERROR')
     
 
 
@@ -185,6 +187,7 @@ def read_history(modbus):
 
     except Exception as e:
         u.logmsg(f"Error occurred: {e}", u.L_ERROR)
+        db.event_log_add(f"read_history, {e}", 'controller monitor', 'ERROR', 'ERROR')
 
 
 
@@ -268,6 +271,7 @@ def read_system_information(modbus):
             u.logmsg('[OK]  system_information updated')
         except Exception as e:
             u.logmsg(f"read_system_information, Error occurred: {e}", u.L_ERROR)
+            db.event_log_add(f"read_system_information, {e}", 'controller monitor', 'ERROR', 'ERROR')
 
         if glb.PUBLISH_BROKER_ENABLED:
             br.publish(br.TOPIC_SYS_INFO, sys_info_text)
@@ -440,5 +444,6 @@ def read_controller_settings(modbus):
             u.logmsg('[OK]  read_controller_settings')
         except Exception as e:
             u.logmsg(f"Error occurred: {e}", u.L_ERROR)
+            db.event_log_add(f"read_controller_settings, {e}", 'controller monitor', 'ERROR', 'ERROR')
 
 

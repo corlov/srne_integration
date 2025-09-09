@@ -665,6 +665,8 @@ def load_control():
     mode = request.args.get('mode')
     device_id = request.args.get('device_id')
 
+    event_log_add(f'{mode}', 'UI lamp on off', 'EVENT', 'DEBUG')
+
     r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
     cmd = cmd_body('control_load_on_off')
     cmd['value'] = mode
