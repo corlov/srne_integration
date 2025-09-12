@@ -6,7 +6,7 @@ export default function ChartsTab() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetch(`${backendEndpoint}/api/controller-temp?range=30d`)
+    fetch(`${backendEndpoint}/charts/get_timeseries?range=30d`)
       .then(res => res.json())
       .then(d => setData(d))
       .catch(console.error);

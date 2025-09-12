@@ -210,13 +210,19 @@ export default function StateTab({error, deviceDynamicData, wifiStatus, gpioData
           </RightCard>
 
           <RightCard title="Состояние ">
-            
             <KeyValuePairs data={complexState}/>
-            <div>
-            <button className="logout-btn" onClick={() => (keyBtnClick(22))}>K2</button>
-            <button className="logout-btn" onClick={() => (keyBtnClick(24))}>K3</button>
-            <button className="logout-btn" onClick={() => (keyBtnClick(26))}>K4</button>
-            </div>
+            {/* <div>
+              Ручное управление ключами
+              <button className="logout-btn" onClick={() => (keyBtnClick(22))}>K2</button>(светофор)
+              <button className="logout-btn" onClick={() => (keyBtnClick(24))}>K3</button>(нагрузка)
+              <button className="logout-btn" onClick={() => (keyBtnClick(26))}>K4</button>(модем)
+            </div> */}
+          </RightCard>
+
+          <RightCard title="Ручное управление ключами">
+              <button className="logout-btn" onClick={() => (keyBtnClick(22))}>K2</button> (светофор)
+              <button className="logout-btn" onClick={() => (keyBtnClick(24))}>K3</button> (нагрузка)
+              <button className="logout-btn" onClick={() => (keyBtnClick(26))}>K4</button> (модем)
           </RightCard>
         </main>
       </div>

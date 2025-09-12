@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 import "../../assets/styles/Field.css"
 import { backendEndpoint } from '../../global_consts/Backend'
+import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 
 function Field({ setting, onSave }) {
+  const dispatch = useDispatch();
+  const authData = useSelector((state) => state.auth);
   const [value, setValue] = useState(setting.value);
   const [saving, setSaving] = useState(false);
 
@@ -13,9 +17,11 @@ function Field({ setting, onSave }) {
     setSaving(true);
     try {
       const body = { value: setting.type === "boolean" ? (value === true || value === "true") : value };
-      const res = await fetch(`${backendEndpoint}/api/settings/${setting.id}`, {
+      const res = await fetch(`${backendEndpoint}/update_complex_settings/${setting.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json", 
+          Authorization: authData.token },
         body: JSON.stringify(body),
       });
       if (!res.ok) {
@@ -25,7 +31,10 @@ function Field({ setting, onSave }) {
         onSave();
 
         if (setting.param == 'time_source') {
-          await fetch(`${backendEndpoint}//api/change_time_source`);
+          await fetch(`${backendEndpoint}/apply_time_source`, {
+            method: "GET",
+            headers: { Authorization: authData.token },
+          });
         }
       }
     } finally {

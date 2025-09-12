@@ -15,7 +15,7 @@ const Login = () => {
 
     const loginUser = async () => {
         try {
-            const response = await axios.post(`${backendEndpoint}/login`, { username, password });
+            const response = await axios.post(`${backendEndpoint}/auth/login`, { username, password });
             setError('')
         
             if (response.data.token) {
@@ -30,7 +30,8 @@ const Login = () => {
               setError('Введен неправильный пользователь или пароль')
             }       
         } catch (err) {
-            setError(err.message)
+            console.log(err)
+            setError(`${err.message} (${err.response.data.message})`)
         }
     };
 

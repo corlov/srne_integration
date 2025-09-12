@@ -129,12 +129,12 @@ export default function TabsPage({
                   </li>
                   <li>
                     <NavLink to="controller_settings" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-                      Настройки контроллера
+                      Настройки
                     </NavLink>
                   </li>
                   <li>
                     <NavLink to="charts" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-                      Графики
+                      Графики параметров работы
                     </NavLink>
                   <li>
                     <NavLink to="internal_log" className={({ isActive }) => (isActive ? "tab active" : "tab")}>

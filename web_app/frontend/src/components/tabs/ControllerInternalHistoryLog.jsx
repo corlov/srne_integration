@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { backendEndpoint } from '../../global_consts/Backend'
 import '../../assets/styles/Table.css'
 import "../../assets/styles/ItemsTable.css"
+import { useSelector } from 'react-redux';
+
 
 const ControllerInternalHistoryLogTab = () => {
 
+  const authData = useSelector((state) => state.auth);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [limit, setLimit] = useState(10);
@@ -22,7 +25,13 @@ const ControllerInternalHistoryLogTab = () => {
       if (limit !== "" && limit !== null) params.append("limit", limit);
 
       
-      const res = await fetch(`${backendEndpoint}/controller_internal_log?${params.toString()}`);
+      const res = await fetch(`${backendEndpoint}/controller_internal_log?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': authData.token,
+          'Accept': 'application/json'
+        }
+      });
       
       
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -163,7 +172,7 @@ const ControllerInternalHistoryLogTab = () => {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 ? (
+            {(items === undefined) || (items.length === 0) ? (
               <tr>
                 <td colSpan="4" className="no-data">Нет данных</td>
               </tr>

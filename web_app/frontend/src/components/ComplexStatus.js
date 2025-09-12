@@ -28,23 +28,23 @@ const ComplexStatus = () => {
 
     const wifiModeHandler = async (mode) => {
       const modeParam = mode ? 'on' : 'off'
-      await axios.get(`${backendEndpoint}/wifi?state=${modeParam}`, 
+      await axios.get(`${backendEndpoint}/wifi_set_state?state=${modeParam}`, 
         {headers: { Authorization: authData.token }});
     };
 
     const keyBtnClick = async (pin) => {
-      await axios.get(`${backendEndpoint}/gpio_set_pin?pin=${pin}`, 
+      await axios.get(`${backendEndpoint}/gpio/set_pin?pin=${pin}`, 
         {headers: { Authorization: authData.token }});
     };
 
     const loadControlClick = async (modeValue) => {
-      await axios.get(`${backendEndpoint}/load_control?mode=${modeValue}&device_id=${deviceId}`, 
+      await axios.get(`${backendEndpoint}/set_controller_load_mode?mode=${modeValue}&device_id=${deviceId}`, 
         {headers: { Authorization: authData.token }});
     };
     
 
     useEffect(() => {
-        const eventSourceUrl = new URL(`${backendEndpoint}/dynamic_data_events/${deviceId}`);
+        const eventSourceUrl = new URL(`${backendEndpoint}/notify/dynamic_data_events/${deviceId}`);
         eventSourceUrl.searchParams.append('Authorization', authData.token);
         const eventSource = new EventSource(eventSourceUrl.toString());
         
@@ -60,7 +60,7 @@ const ComplexStatus = () => {
     }, [authData.token]);
 
     useEffect(() => {
-        const eventSourceUrl = new URL(`${backendEndpoint}/gpio_state`);
+        const eventSourceUrl = new URL(`${backendEndpoint}/gpio/state`);
         eventSourceUrl.searchParams.append('Authorization', authData.token);
         const eventSource = new EventSource(eventSourceUrl.toString());
         
@@ -75,7 +75,7 @@ const ComplexStatus = () => {
     }, [authData.token]);
 
     useEffect(() => {
-      const eventSourceUrl = new URL(`${backendEndpoint}/update_status/${deviceId}`);
+      const eventSourceUrl = new URL(`${backendEndpoint}/notify/complex_events/${deviceId}`);
       eventSourceUrl.searchParams.append('Authorization', authData.token);
 
       const eventSource = new EventSource(eventSourceUrl.toString());

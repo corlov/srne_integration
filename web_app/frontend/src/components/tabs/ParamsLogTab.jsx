@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { backendEndpoint } from '../../global_consts/Backend'
 import '../../assets/styles/Table.css'
 import "../../assets/styles/ItemsTable.css"
+import { useSelector } from 'react-redux';
 
 const ParamsLogTab = () => {
 
+  const authData = useSelector((state) => state.auth);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [limit, setLimit] = useState(10);
@@ -21,8 +23,14 @@ const ParamsLogTab = () => {
       if (endDate) params.append("end_date", endDate);
       if (limit !== "" && limit !== null) params.append("limit", limit);
 
-      
-      const res = await fetch(`${backendEndpoint}/params_log?${params.toString()}`);
+
+      const res = await fetch(`${backendEndpoint}/params_log?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': authData.token,
+          'Accept': 'application/json'
+        }
+      });
       
       
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

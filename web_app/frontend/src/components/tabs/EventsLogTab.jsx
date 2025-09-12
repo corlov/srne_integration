@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { backendEndpoint } from '../../global_consts/Backend'
 import '../../assets/styles/Table.css'
 import "../../assets/styles/ItemsTable.css"
+import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 const EventsLogTab = () => {
-
+  const dispatch = useDispatch();
+  const authData = useSelector((state) => state.auth);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [limit, setLimit] = useState(10);
@@ -39,7 +42,10 @@ const EventsLogTab = () => {
       if (eventType) params.append("event_type", eventType);   // <-- добавить
       if (severity) params.append("severity", severity);       // <-- добавить
 
-      const res = await fetch(`${backendEndpoint}/events_log?${params.toString()}`);
+      const res = await fetch(`${backendEndpoint}/events_log?${params.toString()}`, {
+        method: "GET",
+        headers: { Authorization: authData.token },
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       console.log(data)
