@@ -50,7 +50,7 @@ def login():
         if bcrypt.checkpw(password_bytes, stored):
             token = jwt.encode({
                 'username': username,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=30),
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=600),
                 'role': user.get('role')
             }, glb.SECRET_KEY)
             db.event_log_add(f'Вход пользователя {username}', 'login', 'EVENT', 'INFO')
