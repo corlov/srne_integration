@@ -36,25 +36,41 @@ def events_gpio():
             }
             yield f"data: {json.dumps(data_dict)}\n\n"
             time.sleep(glb.SSE_UPDATE_GPIO_TIMEOUT)
-    
-    error = u.check_auth(request.args.get('Authorization'))
-    if error:
-        return error
-    
-    return Response(generate_events(), content_type='text/event-stream')
+
+    token = request.args.get('Authorization')
+    if not token:
+        return jsonify(message='Token is missing!')
+    try:
+        data = jwt.decode(token, glb.SECRET_KEY, algorithms=["HS256"])
+        return Response(generate_events(), content_type='text/event-stream')
+    except jwt.ExpiredSignatureError:
+        return jsonify(message='Token has expired!')
+    except jwt.InvalidTokenError:
+        return jsonify(message='Invalid token!')
 
 
 
-# FIXME: нужно проверить что это 22 24 26 пин
+
 @gpio_bp.route('/set_pin', methods=['GET'])
 def gpio_set_pin():
-    pin = request.args.get('pin')
+    pin_alias = request.args.get('pin')
 
-    state = im.redis_get(f'GPIO.{pin}')
-    if int(state):
-        im.redis_set(f'GPIO.{pin}', 0)
-        print(f'GPIO.{pin} 0')
+    pin = None
+    if pin_alias == 'PIN_OUT_K2_TRAFFICLIGHT':
+        pin = glb.PIN_OUT_K2_TRAFFICLIGHT
+    if pin_alias == 'PIN_OUT_K3_LAMP':
+        pin = glb.PIN_OUT_K3_LAMP
+    if pin_alias == 'PIN_OUT_K4_MODEM':
+        pin = glb.PIN_OUT_K4_MODEM
+
+    if pin:
+        state = im.redis_get(f'GPIO.{pin}')
+        if int(state):
+            im.redis_set(f'GPIO.{pin}', 0)
+            print(f'GPIO.{pin} 0')
+        else:
+            im.redis_set(f'GPIO.{pin}', 1)
+            print(f'GPIO.{pin} 1')
+        return 'OK'
     else:
-        im.redis_set(f'GPIO.{pin}', 1)
-        print(f'GPIO.{pin} 1')
-    return 'OK'
+        return jsonify({"error": "Invalid pin number"}), 400

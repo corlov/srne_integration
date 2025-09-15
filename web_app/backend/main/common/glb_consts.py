@@ -7,6 +7,7 @@ PIN_IN_WIFI_BUTTON = 18
 
 
 SECRET_KEY = 'uw3cok92adxmzpf35_secret_key_value_12082025'
+EXP_LIMIT = 600
 
 
 # TODO: затем это из переменных среды брать когда запускаем в контейнере

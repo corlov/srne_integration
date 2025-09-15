@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, g
 from flask_cors import CORS
 from flask import render_template
 from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -62,6 +62,10 @@ def after_request(response):
 @app.route('/params_log', methods=['GET'])
 @auth_required
 def params_log():
+    # TODO: сделать роли константами
+    if g.token_data.get('role') not in ['operator', 'admin']:
+        return ''
+
     limit = request.args.get("limit", type=int)
     start_d, end_d = u.convert_dates(request.args.get("start_date"), request.args.get("end_date"))
 

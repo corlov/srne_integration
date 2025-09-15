@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import request, jsonify
+from flask import request, jsonify, g
 import common.utils as u
 
 
@@ -10,9 +10,11 @@ def auth_required(f):
         if not auth_header:
             return jsonify(message='Missing authorization'), 401
         
-        error = u.check_auth(auth_header)
+        error, token_data = u.check_auth(auth_header)
         if error:
             return error
+
+        g.token_data = token_data
             
         return f(*args, **kwargs)
     return decorated_function
