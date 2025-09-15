@@ -220,9 +220,9 @@ export default function StateTab({error, deviceDynamicData, wifiStatus, gpioData
           </RightCard>
 
           <RightCard title="Ручное управление ключами">
-              <button className="logout-btn" onClick={() => (keyBtnClick(22))}>K2</button> (светофор)
-              <button className="logout-btn" onClick={() => (keyBtnClick(24))}>K3</button> (нагрузка)
-              <button className="logout-btn" onClick={() => (keyBtnClick(26))}>K4</button> (модем)
+              <button className="logout-btn" onClick={() => (keyBtnClick('PIN_OUT_K2_TRAFFICLIGHT'))}>K2</button> (светофор)
+              <button className="logout-btn" onClick={() => (keyBtnClick('PIN_OUT_K3_LAMP'))}>K3</button> (нагрузка)
+              <button className="logout-btn" onClick={() => (keyBtnClick('PIN_OUT_K4_MODEM'))}>K4</button> (модем)
           </RightCard>
         </main>
       </div>

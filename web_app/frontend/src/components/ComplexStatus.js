@@ -32,8 +32,8 @@ const ComplexStatus = () => {
         {headers: { Authorization: authData.token }});
     };
 
-    const keyBtnClick = async (pin) => {
-      await axios.get(`${backendEndpoint}/gpio/set_pin?pin=${pin}`, 
+    const keyBtnClick = async (pin_alias) => {
+      await axios.get(`${backendEndpoint}/gpio/set_pin?pin=${pin_alias}`, 
         {headers: { Authorization: authData.token }});
     };
 
