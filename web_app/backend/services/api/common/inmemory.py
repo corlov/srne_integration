@@ -62,3 +62,13 @@ def redis_get(key):
         return r.get(key)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+
+
+def publish(topic, message):
+    try:
+        r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
+        r.publish(topic, message)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+            

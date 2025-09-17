@@ -14,23 +14,28 @@ import common.inmemory as im
 
 def check_auth(token):
     if not token:
-        return jsonify(message='Token is missing!')
+        print('1')
+        return jsonify(message='Token is missing!'), ''
 
     try:
         data = jwt.decode(token, glb.SECRET_KEY, algorithms=["HS256"])
         if data['exp']:
             if time.time() - data['exp'] > glb.EXP_LIMIT:
-                return jsonify(message=f'Expired date is over limit')
+                print('2')
+                return jsonify(message=f'Expired date is over limit'), ''
             if data['role'] not in ['operator', 'whatcher', 'admin', 'engineer']:
-                return jsonify(message=f'incorrect role')
+                print('3')
+                return jsonify(message=f'incorrect role'), ''
         else:
             return jsonify(message=f'Expired date is empty')
 
         return None, data
     except jwt.ExpiredSignatureError:
-        return jsonify(message=f'check_auth, Token has expired! {token}')
+        print('4')
+        return jsonify(message=f'check_auth, Token has expired!'), ''
     except jwt.InvalidTokenError:
-        return jsonify(message='Invalid token!')
+        print('5')
+        return jsonify(message='Invalid token!'), 
 
 
 

@@ -24,7 +24,7 @@ from send_notifications import notify_bp
 from gpio import gpio_bp
 from charts import charts_bp
 from decorators import auth_required
-import system.exec_system_commands as exs
+
 
 app = Flask(__name__)
 CORS(app)
@@ -128,9 +128,9 @@ def change_time_source():
         if src == 'NTP':
             if not addr or not u.is_valid_ntp_server(addr):
                 return jsonify({"error": "Invalid NTP server address"}), 400
-            exs.update_chrony_config(addr)
+            im.publish('chrony_updates', addr)
         else:
-            exs.stop_daemon('chronyd')
+            im.publish('chrony_updates', '')
     except Exception as e:
         db.event_log_add(f"Error applying time source: {str(e)}", 'time', 'ERROR', 'ERROR')
         return jsonify({"error": "Internal server error"}), 500

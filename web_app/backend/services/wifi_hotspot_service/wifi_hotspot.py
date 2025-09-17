@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import subprocess
 import datetime
 import time
@@ -5,25 +7,10 @@ import redis
 import json
 import uuid
 import os
-import psycopg2
-from psycopg2 import sql
-import psycopg2.extras
 
+import db
+import glb_consts as glb
 
-REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
-REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
-
-#FIXME: это названия ключей для нескольких микросервисов используются - нужно в БД или куда то еще определить
-RK_WIFI_STATUS = 'wifi_status'
-RK_WIFI_ON_REQ = 'wifi_activate_on_request'
-RK_WIFI_OFF_REQ = 'wifi_activate_off_request'
-RK_WIFI_TS = 'wifi_activate_ts'
-RK_WIFI_ERROR = 'wifi_error_text'
-RK_WIFI_ERROR_DETAILS = 'wifi_error_text_details'
-
-HOTSPOT_NAME = 'Hotspot'
-
-r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
 
 
 
@@ -32,27 +19,6 @@ def is_connected(redis_client):
         return redis_client.ping()
     except (redis.ConnectionError, redis.TimeoutError):
         return False
-
-
-def get_conn():
-    # FIXME: в настройки пароли убрать
-    connection_params = {
-        'host': 'localhost',
-        'database': 'solar_controller_telemetry',
-        'user': 'postgres',
-        'password': 'gen_postgress_password',
-        'port': '5432'
-    }
-
-    return psycopg2.connect(**connection_params)
-
-
-
-def event_log_add(descr, name, type, severity):
-    # FIXME: try except
-    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-        cur.execute("insert into device.event_log (event_type, event_name, description, severity) values (%s, %s, %s, %s)", (type, name, descr, severity, ))
-        conn.commit()
 
 
 def run_command(command: str) -> str:
@@ -82,7 +48,6 @@ def run_command(command: str) -> str:
 
 
 def run_command_sleep(wifi_on):
-    print(f'RUN CMD: {wifi_on}')
     res = run_command(wifi_on)
     time.sleep(1)
     return res
@@ -92,101 +57,120 @@ def run_command_sleep(wifi_on):
 def send_activate_wifi_cmd(wifi_on):
     global r
 
-    r.set(RK_WIFI_STATUS, 'Ожидание...')
+    r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+    r.set(glb.RK_WIFI_STATUS, 'Ожидание...')
     if wifi_on:
         error_details = ''
         error_details += run_command_sleep('nmcli radio wifi off')
         error_details += run_command_sleep('nmcli radio wifi on')
-        error_details += run_command_sleep(f'nmcli con up {HOTSPOT_NAME}')
+        error_details += run_command_sleep(f'nmcli con up {glb.HOTSPOT_NAME}')
+        time.sleep(3)
         res = run_command_sleep('ip -4 addr show wlan0')
         error_details += res
 
-        #FIXME: подумать как передать в качестве параметра какую сеть должно запуститься
-        if "192.168.4" not in res:
-            print('ERR')
-            r.set(RK_WIFI_ERROR, 'Не удалось активировать сеть')
-            r.set(RK_WIFI_ERROR_DETAILS, error_details)
-            r.set(RK_WIFI_STATUS, 'Откл.')
+        if glb.WIFI_NETWORK_PREFIX not in res:
+            db.logmsg('ERR', 'res: ' + res, error_details)
+            r.set(glb.RK_WIFI_ERROR, 'Не удалось активировать сеть')
+            r.set(glb.RK_WIFI_ERROR_DETAILS, error_details)
+            r.set(glb.RK_WIFI_STATUS, 'Откл.')
         else:
-            print('OK')
-            r.set(RK_WIFI_ERROR, '')
-            r.set(RK_WIFI_ERROR_DETAILS, '')
-            r.set(RK_WIFI_STATUS, 'Вкл.')
+            db.logmsg('OK on')
+            r.set(glb.RK_WIFI_ERROR, '')
+            r.set(glb.RK_WIFI_ERROR_DETAILS, '')
+            r.set(glb.RK_WIFI_STATUS, 'Вкл.')
             
     else:
         error_details = ''
-        error_details += run_command_sleep(f'nmcli con down {HOTSPOT_NAME}')
+        error_details += run_command_sleep(f'nmcli con down {glb.HOTSPOT_NAME}')
         error_details += run_command_sleep('nmcli radio wifi off')
         res = run_command_sleep('ip -4 addr show wlan0')
         error_details += res
 
-        if "192.168.4" not in res:
-            print('OK')
-            r.set(RK_WIFI_ERROR, '')
-            r.set(RK_WIFI_ERROR_DETAILS, '')
-            r.set(RK_WIFI_STATUS, 'Откл.')
+        if glb.WIFI_NETWORK_PREFIX not in res:
+            db.logmsg('OK off')
+            r.set(glb.RK_WIFI_ERROR, '')
+            r.set(glb.RK_WIFI_ERROR_DETAILS, '')
+            r.set(glb.RK_WIFI_STATUS, 'Откл.')
         else:
-            print('ERR')
-            r.set(RK_WIFI_ERROR, 'Не удалось деактивировать сеть')
-            r.set(RK_WIFI_ERROR_DETAILS, error_details)
-            r.set(RK_WIFI_STATUS, 'Вкл.')
+            db.logmsg('ERR', 'res: ' + res, error_details)
+            r.set(glb.RK_WIFI_ERROR, 'Не удалось деактивировать сеть')
+            r.set(glb.RK_WIFI_ERROR_DETAILS, error_details)
+            r.set(glb.RK_WIFI_STATUS, 'Вкл.')
+
+
+
+def init():
+    global PIN_OUT_K2_TRAFFICLIGHT
+
+    glb.WIFI_NETWORK_PREFIX = os.getenv('WIFI_NETWORK_PREFIX', '192.168.4')
+    glb.REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
+    glb.REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+    glb.PG_CONNECT_PARAMS = { 
+        'dbname': os.getenv('DB_NAME', 'solar_controller_telemetry'), 
+        'user': os.getenv('DB_USER', 'postgres'), 
+        'password': os.getenv('DB_PASSWORD', 'gen_postgress_password'), 
+        'host': os.getenv('DB_HOST', 'localhost'), 
+        'port': int(os.getenv('DB_PORT', 5432)), 
+    }
 
 
 
 def main():
     global r
 
-    event_log_add('запуск демона', 'wifi', 'EVENT', 'INFO')
+    db.logmsg('started')
+    init()
+
+    db.event_log_add('запуск демона', 'wifi', 'EVENT', 'INFO')
     ts_activate_ts = 0
 
-    if r.exists(RK_WIFI_TS):
-        ts_activate_ts = int(r.get(RK_WIFI_TS))
+    r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+    if r.exists(glb.RK_WIFI_TS):
+        ts_activate_ts = int(r.get(glb.RK_WIFI_TS))
 
         if int(time.time()) - int(ts_activate_ts) > 60*60:
             send_activate_wifi_cmd(False)
             ts_activate_ts = 0
 
+    db.logmsg('init Redis [OK]')
     try:
         while True:
-            cur_state = r.get(RK_WIFI_STATUS).decode('utf-8') + '], on: ' + r.get(RK_WIFI_ON_REQ).decode('utf-8') + ', off: '+ r.get(RK_WIFI_OFF_REQ).decode('utf-8') + ', ts: '+r.get(RK_WIFI_TS).decode('utf-8')
+            cur_state = r.get(glb.RK_WIFI_STATUS).decode('utf-8') + '], on: ' + r.get(glb.RK_WIFI_ON_REQ).decode('utf-8') + ', off: '+ r.get(glb.RK_WIFI_OFF_REQ).decode('utf-8') + ', ts: '+r.get(glb.RK_WIFI_TS).decode('utf-8')
             print('tick [', cur_state)
             
-            # r.set(RK_WIFI_ERROR, time.time())
-            # r.set(RK_WIFI_ERROR_DETAILS, time.time())
-            time.sleep(1)
+            time.sleep(glb.DEBOUNCE_TIMEOUT)
 
             if not is_connected(r):
                 r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
 
             # есть команда включения Wifi? 
-            if r.exists(RK_WIFI_ON_REQ):
-                req = int(r.get(RK_WIFI_ON_REQ))
+            if r.exists(glb.RK_WIFI_ON_REQ):
+                req = int(r.get(glb.RK_WIFI_ON_REQ))
                 if req:
                     print('new command: on Req, ', req)
                     ts_activate_ts = int(time.time())
-                    r.set(RK_WIFI_TS, ts_activate_ts)
-                    r.set(RK_WIFI_ON_REQ, 0)
+                    r.set(glb.RK_WIFI_TS, ts_activate_ts)
+                    r.set(glb.RK_WIFI_ON_REQ, 0)
                     send_activate_wifi_cmd(True)
-                    event_log_add('включение', 'wifi', 'EVENT', 'INFO')
+                    db.event_log_add('включение', 'wifi', 'EVENT', 'INFO')
             else:
-                r.set(RK_WIFI_ON_REQ, 0)
+                r.set(glb.RK_WIFI_ON_REQ, 0)
 
-            if ts_activate_ts > 0 and int(time.time()) - ts_activate_ts > 3*60:#60*60:
+            if ts_activate_ts > 0 and int(time.time()) - ts_activate_ts > glb.HOLD_WIFI_ACTIVE_TIMEOUT_SECONDS:
                 send_activate_wifi_cmd(False)
                 ts_activate_ts = 0
 
-
             # есть команда отключения Wifi?
-            if r.exists(RK_WIFI_OFF_REQ):
-                req = int(r.get(RK_WIFI_OFF_REQ))
+            if r.exists(glb.RK_WIFI_OFF_REQ):
+                req = int(r.get(glb.RK_WIFI_OFF_REQ))
                 if req:
                     print('new command: off Req, ', req)
-                    r.set(RK_WIFI_OFF_REQ, 0)
+                    r.set(glb.RK_WIFI_OFF_REQ, 0)
                     send_activate_wifi_cmd(False)
                     ts_activate_ts = 0
-                    event_log_add('отключение', 'wifi', 'EVENT', 'INFO')
+                    db.event_log_add('отключение', 'wifi', 'EVENT', 'INFO')
             else:
-                r.set(RK_WIFI_OFF_REQ, 0)
+                r.set(glb.RK_WIFI_OFF_REQ, 0)
     finally:
         r.close()
     

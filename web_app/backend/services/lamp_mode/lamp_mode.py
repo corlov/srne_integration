@@ -1,8 +1,9 @@
+#!/usr/bin/python3
+
 #
 # Испольняет режим работы светофора заданый
 #
 import time
-import RepkaPi.GPIO as GPIO
 import redis
 import os
 import psycopg2
@@ -12,90 +13,11 @@ import json
 import datetime
 import uuid
 
-REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
-REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
-RK_TELEMETRY = 'telemetry'
-# FIXME: параметр контейнера 
-device_id = 2
-MODE_1 = "режим"
-MODE_2 = "откл."
-MODE_3 = "вкл."
-PIN_OUT_K3_LAMP = 24
-
-controller_modes_dict = {
-    "контроль включения/выключения нагрузки": 0,
-    "выкл. через 1 час": 1,
-    "выкл. через 2 час": 2,
-    "выкл. через 3 час": 3,
-    "выкл. через 4 час": 4,
-    "выкл. через 5 час": 5,
-    "выкл. через 6 час": 6,
-    "выкл. через 7 час": 7,
-    "выкл. через 8 час": 8,
-    "выкл. через 9 час": 9,
-    "выкл. через 10 час": 10,
-    "выкл. через 11 час": 11,
-    "выкл. через 12 час": 12,
-    "выкл. через 13 час": 13,
-    "выкл. через 14 час": 14,
-    "ручной режим": 15,
-    "режим отладки": 16,
-    "включен": 17
-}
+import db
+import glb_consts as glb
 
 
-
-#FIXME: реконнект сделать к объекту если соединение утеряно
-r = redis.StrictRedis(host=REDIS_ADDR, port=REDIS_PORT, db=0)
-
-def get_conn():
-    # FIXME: в настройки пароли убрать
-    connection_params = {
-        'host': 'localhost',
-        'database': 'solar_controller_telemetry',
-        'user': 'postgres',
-        'password': 'gen_postgress_password',
-        'port': '5432'
-    }
-    return psycopg2.connect(**connection_params)
-
-
-
-# ERROR EVENT
-# DEBUG INFO WARNING ERROR
-def event_log_add(descr, name, type, severity):
-    # FIXME: try except
-    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-        cur.execute("insert into device.event_log (event_type, event_name, description, severity) values (%s, %s, %s, %s)", (type, name, descr, severity, ))
-        conn.commit()
-
-
-
-def get_actual_mode():
-    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-        cur.execute("select value from device.complex_settings cs where param = 'load_work_mode'")
-        s = cur.fetchone()
-        if not s:
-            return None, None
-        mode_complex = s["value"]
-
-        cur.execute("select value from device.complex_settings cs where param = 'device_load_working_mode'")
-        s = cur.fetchone()
-        if not s:
-            return None, None
-
-        return mode_complex, controller_modes_dict[s["value"]]
-
-
-
-def redis_read(key_name, device_id="", additonal_params=""):
-    key = key_name + str(device_id) + additonal_params
-    payload = ''
-    if r.exists(key):
-        payload = r.get(key)
-        return json.loads(payload)
-    return ''
-
+PIN_OUT_K3_LAMP = None
 
 
 def cmd_body(command_name):
@@ -113,7 +35,8 @@ def cmd_body(command_name):
 def load_control(on_off):
     cmd = cmd_body('control_load_on_off')
     cmd['value'] = on_off
-    r.set('command' + str(device_id), json.dumps(cmd))
+    r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+    r.set('command' + str(glb.DEVICE_ID), json.dumps(cmd))
 
 
 
@@ -121,44 +44,65 @@ def set_working_mode(mode):
     if mode >= 0x00 and mode <= 0x11:
         cmd = cmd_body('set_load_working_mode')
         cmd['value'] = mode
-        r.set('command' + str(device_id), json.dumps(cmd))
+        r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+        r.set('command' + str(glb.DEVICE_ID), json.dumps(cmd))
     else:
-        event_log_add(f'Нераспознаный режим работы контроллера СП {mode}', 'lamp control daemon', 'ERROR', 'ERROR')
+        db.event_log_add(f'Нераспознаный режим работы контроллера СП {mode}', 'lamp control daemon', 'ERROR', 'ERROR')
         
 
 
 def apply_mode(mode_complex, mode_controller):
-    if mode_complex == MODE_1:
+    r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)
+    if mode_complex == glb.MODE_1:
         set_working_mode(mode_controller)
         r.set(f'GPIO.{PIN_OUT_K3_LAMP}', 1)
-    elif mode_complex == MODE_2:
+    elif mode_complex == glb.MODE_2:
         r.set(f'GPIO.{PIN_OUT_K3_LAMP}', 0)
         set_working_mode(15)
         load_control(0)
-    elif mode_complex == MODE_3:
+    elif mode_complex == glb.MODE_3:
         r.set(f'GPIO.{PIN_OUT_K3_LAMP}', 1)
         set_working_mode(15)
         load_control(1)
     else:
-        event_log_add(f'Нераспознаный режим {mode_complex}', 'lamp control daemon', 'ERROR', 'ERROR')
+        db.event_log_add(f'Нераспознаный режим {mode_complex}', 'lamp control daemon', 'ERROR', 'ERROR')
+
+
+
+def init():
+    global PIN_OUT_K3_LAMP
+
+    glb.DEVICE_ID = int(os.getenv('DEVICE_ID', 2))
+    glb.REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
+    glb.REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+    glb.PG_CONNECT_PARAMS = { 
+        'dbname': os.getenv('DB_NAME', 'solar_controller_telemetry'), 
+        'user': os.getenv('DB_USER', 'postgres'), 
+        'password': os.getenv('DB_PASSWORD', 'gen_postgress_password'), 
+        'host': os.getenv('DB_HOST', 'localhost'), 
+        'port': int(os.getenv('DB_PORT', 5432)), 
+    }
+
+    PIN_OUT_K3_LAMP = db.get_pin_by_code('PIN_OUT_K3_LAMP')
 
 
 
 def main():
-    mode_complex, mode_controller = get_actual_mode()
+    init()
+
+    mode_complex, mode_controller = db.get_actual_mode()
     apply_mode(mode_complex, mode_controller)
     current_mode = mode_complex
     while True:
         time.sleep(1)
 
-        mode_complex, mode_controller = get_actual_mode()
+        mode_complex, mode_controller = db.get_actual_mode()
         print(mode_complex, mode_controller)
         if current_mode != mode_complex:
-            event_log_add(f'Смена режима {current_mode} -> {mode_complex}', 'lamp control daemon', 'EVENT', 'WARNING')
+            db.event_log_add(f'Смена режима {current_mode} -> {mode_complex}', 'lamp control daemon', 'EVENT', 'WARNING')
             apply_mode(mode_complex, mode_controller)
 
         current_mode = mode_complex
-
 
 
 main()

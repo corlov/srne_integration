@@ -32,7 +32,6 @@ def event_log_add(descr, name, type, severity):
 
 def _get_one_row(sql_code):
     try:
-        print(sql_code)
         conn = _get_conn()
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             query = sql.SQL(sql_code)

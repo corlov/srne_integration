@@ -1,0 +1,19 @@
+docker build -t lamp_mode .
+
+docker run -d --restart always --name lamp-mode-service \
+    -e DEVICE_ID=2 \
+    -e DB_HOST=192.168.1.83 \
+    -e DB_PORT=5432 \
+    -e DB_USER=postgres \
+    -e DB_PASSWORD=gen_postgress_password \
+    -e DB_NAME=solar_controller_telemetry \
+    -e REDIS_HOST=192.168.1.83 \
+    -e REDIS_PORT=6379 \
+    lamp_mode:latest
+
+docker exec -it lamp-mode-service /bin/bash
+
+
+docker logs -f lamp-mode-service
+
+

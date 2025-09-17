@@ -11,6 +11,7 @@ def auth_required(f):
             return jsonify(message='Missing authorization'), 401
         
         error, token_data = u.check_auth(auth_header)
+        print(error, token_data)
         if error:
             return error
 
