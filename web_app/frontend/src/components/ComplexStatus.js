@@ -21,15 +21,28 @@ const ComplexStatus = () => {
     const [deviceSettings, setSettings] = useState(null)
     const [deviceSystemInfo, setSystemInfo] = useState(null)
     const [complexInfo, setComplexInfo] = useState(null)
+    const [wifiMessage, setWifiMessage] = useState('')
 
     const logoutUser = async () => {
         dispatch(logout());
     };
 
     const wifiModeHandler = async (mode) => {
-      const modeParam = mode ? 'on' : 'off'
-      await axios.get(`${backendEndpoint}/wifi_set_state?state=${modeParam}`, 
-        {headers: { Authorization: authData.token }});
+      const differenceSeconds = Math.floor((Math.floor(Date.now() / 1000) - authData.loginTimestamp) / 1000);
+      if (differenceSeconds <= 5*60) {
+        const modeParam = mode ? 'on' : 'off'
+        const response = await axios.get(`${backendEndpoint}/wifi_set_state?state=${modeParam}`, 
+          {headers: { Authorization: authData.token }});        
+        if (response?.data?.message) {
+          setWifiMessage(response.data.message)
+        }
+        else { 
+          setWifiMessage(`Передана команда wifi ${mode ? 'вкл' : 'откл'}`)
+        }
+      }
+      else {
+        setWifiMessage(`Необходимо перелогинится, время сессии истекло ${differenceSeconds} секунд назад`)
+      }
     };
 
     const keyBtnClick = async (pin_alias) => {
@@ -112,7 +125,8 @@ const ComplexStatus = () => {
               logoutUser={logoutUser}
               wifiModeHandler={wifiModeHandler}
               keyBtnClick={keyBtnClick}
-              loadControlClick={loadControlClick}/>
+              loadControlClick={loadControlClick}
+              wifiMessage={wifiMessage}/>
           } />
         </Routes>
       </BrowserRouter>

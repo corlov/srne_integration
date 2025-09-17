@@ -25,7 +25,8 @@ export default function TabsPage({
   logoutUser, 
   wifiModeHandler,
   keyBtnClick,
-  loadControlClick
+  loadControlClick,
+  wifiMessage
 }) {
     const dispatch = useDispatch();
     const authData = useSelector((state) => state.auth);
@@ -58,6 +59,7 @@ export default function TabsPage({
   
           
           <div className="header-right">
+          <div>{wifiMessage}</div>
             Лампа:
             <button className="logout-btn" onClick={() => loadControlClick(1)}>Вкл.</button>
             <button className="logout-btn" onClick={() => loadControlClick(0)}>Откл.</button>
@@ -67,6 +69,7 @@ export default function TabsPage({
             [Пользователь: <b>{authData.username},</b> дата входа: {loginDatetime}]
             <button className="logout-btn" onClick={logoutUser}>Выход</button>
           </div>
+          
         </header>
 
      
