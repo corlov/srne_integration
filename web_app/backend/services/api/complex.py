@@ -213,7 +213,33 @@ def wifi_set():
     return 'OK'
 
 
+def init():
+    im.REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
+    im.REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+
+    glb.SECRET_KEY = os.getenv('SECRET_KEY', 'uw3cok92adxmzpf35_secret_key_value_12082025')
+    glb.EXP_LIMIT = int(os.getenv('EXP_LIMIT', 600))
+
+    glb.DB_HOST = os.getenv('DB_HOST', 'localhost')
+    glb.DB_NAME = os.getenv('DB_NAME', 'solar_controller_telemetry')
+    glb.DB_USER = os.getenv('DB_USER', 'postgres')
+    glb.DB_PASSWORD = os.getenv('DB_PASSWORD', 'gen_postgress_password')
+    glb.DB_PORT = int(os.getenv('DB_PORT', 5432))
+
+    glb.SSE_UPDATE_GPIO_TIMEOUT = int(os.getenv('SSE_UPDATE_GPIO_TIMEOUT', 5))
+    glb.SSE_UPDATE_DYNAMIC_DATA_TIMEOUT = int(os.getenv('SSE_UPDATE_DYNAMIC_DATA_TIMEOUT', 10))
+    glb.SSE_UPDATE_COMPLEX_STATUS_TIMEOUT = int(os.getenv('SSE_UPDATE_COMPLEX_STATUS_TIMEOUT', 3))
+
+
+    glb.PIN_OUT_K2_TRAFFICLIGHT = db.get_pin_by_code('PIN_OUT_K2_TRAFFICLIGHT')
+    glb.PIN_OUT_K3_LAMP = db.get_pin_by_code('PIN_OUT_K3_LAMP')
+    glb.PIN_OUT_K4_MODEM = db.get_pin_by_code('PIN_OUT_K4_MODEM')
+    glb.PIN_IN_CABINET_OPEN_DOOR_BUTTON = db.get_pin_by_code('PIN_IN_CABINET_OPEN_DOOR_BUTTON')
+    glb.PIN_IN_WIFI_BUTTON = db.get_pin_by_code('PIN_IN_WIFI_BUTTON')
+
+
 
 if __name__ == '__main__':
+    init()
     app.run(host='0.0.0.0', port=5011)
 

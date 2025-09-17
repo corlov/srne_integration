@@ -1,4 +1,3 @@
-# FIXME: это с модулем GPIO общие настройки, их можно хранить в БД, например
 PIN_OUT_K2_TRAFFICLIGHT = 22
 PIN_OUT_K3_LAMP = 24
 PIN_OUT_K4_MODEM = 26

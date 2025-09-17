@@ -378,5 +378,9 @@ def get_timeseries_fro_charts():
     return ds
 
 
+def get_pin_by_code(code):
+    row = _get_one_row(f"select pin from device.gpio_names where code = '{code}'")
+    return row['pin']
+
 
 
