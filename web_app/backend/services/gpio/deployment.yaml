@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: service-gpio
+  name: service-gpio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: service-gpio
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: service-gpio
+    spec:
+      containers:
+        - env:
+            - name: DB_HOST
+              value: 192.168.1.83
+            - name: DB_NAME
+              value: solar_controller_telemetry
+            - name: DB_PASSWORD
+              value: gen_postgress_password
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: postgres
+            - name: REDIS_HOST
+              value: 192.168.1.83
+            - name: REDIS_PORT
+              value: "6379"
+          image: localhost:5000/gpio:latest
+          name: gpio-service
+          securityContext:
+            privileged: true
+      restartPolicy: Always

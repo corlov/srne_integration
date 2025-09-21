@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: service-srne-adaptor
+  name: service-srne-adaptor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: service-srne-adaptor
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: service-srne-adaptor
+    spec:
+      securityContext:
+        supplementalGroups: [ 20 ] # getent group dialout   dialout:x:20:root
+      containers:
+        - env:
+            - name: DB_HOST
+              value: 192.168.1.83
+            - name: DB_NAME
+              value: solar_controller_telemetry
+            - name: DB_PASSWORD
+              value: gen_postgress_password
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: postgres
+            - name: DEVICE_ID
+              value: "2"
+            - name: DEVICE_SYS_ADDR
+              value: /dev/ttyS0
+            - name: MQTT_PASS
+              value: qwe123
+            - name: MQTT_PORT
+              value: "1883"
+            - name: MQTT_SERVER_ADDR
+              value: 192.168.1.199
+            - name: MQTT_USER
+              value: srne_user
+            - name: PUBLISH_BROKER_ENABLED
+              value: "true"
+            - name: REDIS_HOST
+              value: 192.168.1.83
+            - name: REDIS_PORT
+              value: "6379"
+          image: localhost:5000/srne_adaptor:latest
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: tty-device   # Имя, которое связывает с томом ниже
+              mountPath: /dev/ttyS0 # Путь ВНУТРИ контейнера
+          name: srne-adaptor-service
+      volumes:
+        - name: tty-device       # То же самое имя, что и выше
+          hostPath:
+            path: /dev/ttyS0     # Путь на ХОСТЕ (твоем Raspberry Pi)
+            type: CharDevice     # Указываем, что это символьное устройство
+      restartPolicy: Always

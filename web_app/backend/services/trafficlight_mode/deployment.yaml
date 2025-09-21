@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.37.0 (fb0539e64)
+  labels:
+    io.kompose.service: service-trafficlight-mode
+  name: service-trafficlight-mode
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: service-trafficlight-mode
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.37.0 (fb0539e64)
+      labels:
+        io.kompose.service: service-trafficlight-mode
+    spec:
+      containers:
+        - env:
+            - name: DB_HOST
+              value: 192.168.1.83
+            - name: DB_NAME
+              value: solar_controller_telemetry
+            - name: DB_PASSWORD
+              value: gen_postgress_password
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: postgres
+            - name: DEVICE_ID
+              value: "2"
+            - name: REDIS_HOST
+              value: 192.168.1.83
+            - name: REDIS_PORT
+              value: "6379"
+          image: localhost:5000/trafficlight_mode:latest
+          name: trafficlight-mode-service
+      restartPolicy: Always

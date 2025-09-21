@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  service_gpio:
+    image: gpio:latest
+    build:
+      context: ./gpio  # Путь к Dockerfile
+    environment:
+      - DB_HOST=192.168.1.83
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=gen_postgress_password
+      - DB_NAME=solar_controller_telemetry
+      - REDIS_HOST=192.168.1.83
+      - REDIS_PORT=6379
+    networks:
+      - my_network
+    restart: always   # Restart policy
+    privileged: true  # Privileged mode
+    volumes:
+      - /sys:/sys  # Volume mapping
+    container_name: gpio-service  # Container name
+    deploy:
+      replicas: 1  # Run one instance in detached mode
+
+  service_api:
+    # image: build
+    image: complex_api:latest # Указывает имя образа, который будет использоваться для сервиса. Если вы собираете образ из Dockerfile, укажите build
+    build:
+      context: ./api
+    ports:
+      - "5011:5011"
+    environment:
+      - DB_HOST=192.168.1.83
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=gen_postgress_password
+      - DB_NAME=solar_controller_telemetry
+      - REDIS_HOST=192.168.1.83
+      - REDIS_PORT=6379
+      - SECRET_KEY=uw3cok92adxmzpf35_secret_key_value_12082025
+      - EXP_LIMIT=600
+      - SSE_UPDATE_GPIO_TIMEOUT=5
+      - SSE_UPDATE_DYNAMIC_DATA_TIMEOUT=10
+      - SSE_UPDATE_COMPLEX_STATUS_TIMEOUT=3
+    restart: always 
+    container_name: complex-api-service
+    deploy:
+      replicas: 1
+    networks:
+      - my_network
+
+  service_lamp_mode:
+    image: lamp_mode:latest  
+    build:
+      context: ./lamp_mode
+    environment:
+      - DEVICE_ID=2
+      - DB_HOST=192.168.1.83
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=gen_postgress_password
+      - DB_NAME=solar_controller_telemetry
+      - REDIS_HOST=192.168.1.83
+      - REDIS_PORT=6379
+    networks:
+      - my_network
+    restart: always
+    container_name: lamp-mode-service
+    deploy:
+      replicas: 1
+  
+  service_trafficlight_mode:
+    image: trafficlight_mode:latest
+    build:
+      context: ./trafficlight_mode
+    environment:
+      - DEVICE_ID=2
+      - DB_HOST=192.168.1.83
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=gen_postgress_password
+      - DB_NAME=solar_controller_telemetry
+      - REDIS_HOST=192.168.1.83
+      - REDIS_PORT=6379
+    networks:
+      - my_network
+    restart: always
+    container_name: trafficlight-mode-service
+    deploy:
+      replicas: 1
+  
+  service_srne_adaptor:
+    image: srne_adaptor:latest
+    build:
+      context: ./srne_adaptor
+    environment:
+      - DEVICE_ID=2
+      - DB_HOST=192.168.1.83
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=gen_postgress_password
+      - DB_NAME=solar_controller_telemetry
+      - REDIS_HOST=192.168.1.83
+      - REDIS_PORT=6379
+      - DEVICE_SYS_ADDR=/dev/ttyS0
+      - PUBLISH_BROKER_ENABLED=true
+      - MQTT_SERVER_ADDR=192.168.1.199
+      - MQTT_PORT=1883
+      - MQTT_USER=srne_user
+      - MQTT_PASS=qwe123
+    networks:
+      - my_network
+    restart: always
+    container_name: srne-adaptor-service
+    devices:
+      - /dev/ttyS0:/dev/ttyS0  # Device mapping
+    deploy:
+      replicas: 1
+
+
+networks:
+  my_network:
+    driver: bridge  # драйвер по умолчанию
