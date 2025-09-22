@@ -1,5 +1,10 @@
 docker build -t gpio .
 
+Затем, если под кубером:
+    docker tag gpio:latest localhost:5000/gpio:latest
+    docker push localhost:5000/gpio:latest 
+    kubectl rollout restart deployment service-gpio    или     kubectl apply -f . -R
+
 docker run -d --restart always --privileged --name gpio-service -v /sys:/sys \
     -e DB_HOST=192.168.1.83 \
     -e DB_PORT=5432 \

@@ -46,9 +46,39 @@ spec:
               value: "10"
             - name: SSE_UPDATE_GPIO_TIMEOUT
               value: "5"
+          command: ["python3", "complex.py"]
           image: localhost:5000/complex_api:latest
           name: complex-api-service
+          livenessProbe:
+            httpGet:
+              path: /healthz      # Наш новый эндпоинт
+              port: 5011          # Порт, на котором работает приложение
+            initialDelaySeconds: 30 # Даем поду 15 секунд на запуск перед первой проверкой
+            periodSeconds: 60       # Проверять каждые 20 секунд
+            timeoutSeconds: 5       # Считать проверку проваленной, если нет ответа за 5 секунд
+            failureThreshold: 3     # Перезапустить под после 3 провалов подряд
+
+          readinessProbe:
+            httpGet:
+              path: /healthz      # Можно использовать тот же эндпоинт
+              port: 5011
+            initialDelaySeconds: 50  # Начинаем проверять готовность раньше
+            periodSeconds: 30       # Проверяем готовность чаще
+            timeoutSeconds: 10
+            failureThreshold: 3     # Убрать под из сервиса после 3 провалов
+     
+          # FIXME: убрать при ПРОДе НАЧАЛО
+          volumeMounts:
+            - name: source-code
+              mountPath: /app
+          # FIXME: убрать при ПРОДе КОНЕЦ
           ports:
             - containerPort: 5011
               protocol: TCP
+      # FIXME: убрать при ПРОДе НАЧАЛО
+      volumes:
+        - name: source-code
+          hostPath:
+            path: /root/solar/services/api
+      # FIXME: убрать при ПРОДе КОНЕЦ
       restartPolicy: Always

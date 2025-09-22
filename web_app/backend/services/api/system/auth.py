@@ -11,7 +11,7 @@ import bcrypt
 import psycopg2
 from psycopg2 import sql
 import psycopg2.extras
-# local modules:
+
 import common.db as db
 import common.glb_consts as glb
 import common.inmemory as im
@@ -35,6 +35,9 @@ def login():
         if username is None or password == '':
             return jsonify(message='Missing credentials'), 400
 
+        if users is None:
+            return jsonify(message='Users empty'), 400
+
         password_bytes = password.encode('utf-8')
 
         user = next((u for u in users if u['username'] == username), None)
@@ -47,7 +50,7 @@ def login():
         if isinstance(stored, str):
             stored = stored.encode('utf-8')
     except Exception as e:
-        return jsonify(message=f'Exception (stage 1): {e}'), 401
+        return jsonify(message=f'Exception (stage 1): {e}, username: {username} password: {password}'), 401
 
     try:
         if bcrypt.checkpw(password_bytes, stored):
@@ -57,7 +60,7 @@ def login():
                 'role': user.get('role')
             }, glb.SECRET_KEY)
             db.event_log_add(f'Вход пользователя {username}', 'login', 'EVENT', 'INFO')
-            return jsonify(token=token)
+            return jsonify(token=token, exp=glb.EXP_LIMIT, role=user.get('role'))
     except Exception as e:
         return jsonify(message=f'Exception (stage 2): {e}'), 401
 

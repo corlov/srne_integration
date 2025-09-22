@@ -102,7 +102,7 @@ def init():
 def main():
     init()
 
-    u.logmsg('Started')
+    u.logmsg('Started v.1.0.0')
     u.logmsg(f'model: {GPIO.getboardmodel()}, ver: {GPIO.VERSION}, info: {GPIO.RPI_INFO}')
     
 
@@ -119,8 +119,9 @@ def main():
             # Small delay to debounce
             time.sleep(0.2)
 
-            if time.time() - prev_time > 5*60:
+            if time.time() - prev_time > glb.HEARTBEAT_UPD_TIMEOUT:
                 db.event_log_add('Тест связи', 'gpio', 'EVENT', 'DEBUG')
+                u.logmsg(f'tick')
                 prev_time = time.time()
 
             r = redis.StrictRedis(host=glb.REDIS_ADDR, port=glb.REDIS_PORT, db=0)

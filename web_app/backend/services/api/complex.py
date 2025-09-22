@@ -62,7 +62,6 @@ def after_request(response):
 @app.route('/params_log', methods=['GET'])
 @auth_required
 def params_log():
-    # TODO: сделать роли константами
     if g.token_data.get('role') not in ['operator', 'admin']:
         return ''
 
@@ -213,6 +212,14 @@ def wifi_set():
     return 'OK'
 
 
+
+@app.route('/healthz', methods=['GET'])
+def health_check():
+    return jsonify({"healthZ-status": "OK"}), 200
+    #return jsonify({"status": "error", "details": "database is down"}), 503
+
+
+
 def init():
     im.REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
     im.REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
@@ -230,7 +237,6 @@ def init():
     glb.SSE_UPDATE_DYNAMIC_DATA_TIMEOUT = int(os.getenv('SSE_UPDATE_DYNAMIC_DATA_TIMEOUT', 10))
     glb.SSE_UPDATE_COMPLEX_STATUS_TIMEOUT = int(os.getenv('SSE_UPDATE_COMPLEX_STATUS_TIMEOUT', 3))
 
-
     glb.PIN_OUT_K2_TRAFFICLIGHT = db.get_pin_by_code('PIN_OUT_K2_TRAFFICLIGHT')
     glb.PIN_OUT_K3_LAMP = db.get_pin_by_code('PIN_OUT_K3_LAMP')
     glb.PIN_OUT_K4_MODEM = db.get_pin_by_code('PIN_OUT_K4_MODEM')
@@ -241,5 +247,7 @@ def init():
 
 if __name__ == '__main__':
     init()
-    app.run(host='0.0.0.0', port=5011)
+    # app.run(host='0.0.0.0', port=5011)
+    # debug=True включает и отладчик, и reloader
+    app.run(host='0.0.0.0', port=5011, debug=True)
 

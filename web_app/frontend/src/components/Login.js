@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { login } from '../redux/actions/Auth';
+import { login, logout } from '../redux/actions/Auth';
 import { backendEndpoint } from '../global_consts/Backend'
 import axios from 'axios';
 import '../assets/styles/Login.css';
@@ -19,12 +19,19 @@ const Login = () => {
             setError('')
         
             if (response.data.token) {
-              dispatch(login({
-                username: username, 
-                loginTimestamp: Math.floor(Date.now() / 1000), 
-                token: response.data.token,
-                deviceId: deviceId
-            }));
+                console.log(response.data)
+                dispatch(login({
+                    username: username, 
+                    loginTimestamp: Math.floor(Date.now() / 1000),
+                    token: response.data.token,
+                    deviceId: deviceId,
+                    expiresIn: response.data.exp,
+                    role: response.data.role
+                }));
+
+                setTimeout(() => {
+                    dispatch(logout());
+                }, response.data.exp * 1000);
             }
             else {
               setError('Введен неправильный пользователь или пароль')

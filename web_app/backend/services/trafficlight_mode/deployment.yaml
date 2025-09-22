@@ -38,6 +38,27 @@ spec:
               value: 192.168.1.83
             - name: REDIS_PORT
               value: "6379"
-          image: localhost:5000/trafficlight_mode:latest
+          image: localhost:5000/traffic_light_mode:latest
+          imagePullPolicy: Always # всегда скачивать образ из репзитория 
           name: trafficlight-mode-service
+
+          livenessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
       restartPolicy: Always

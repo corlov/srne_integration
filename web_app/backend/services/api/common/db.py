@@ -20,7 +20,7 @@ def _get_conn():
     try:
         return psycopg2.connect(**connection_params)
     except OperationalError as ex:
-        l.logmsg("Не удалось установить соединение с БД")
+        l.logmsg(f"Не удалось установить соединение с БД {glb.DB_HOST}:{glb.DB_PORT} {glb.DB_NAME}")
         raise
 
 

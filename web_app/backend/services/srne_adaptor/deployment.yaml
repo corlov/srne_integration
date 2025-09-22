@@ -47,7 +47,7 @@ spec:
             - name: MQTT_USER
               value: srne_user
             - name: PUBLISH_BROKER_ENABLED
-              value: "true"
+              value: "false"
             - name: REDIS_HOST
               value: 192.168.1.83
             - name: REDIS_PORT
@@ -59,6 +59,25 @@ spec:
             - name: tty-device   # Имя, которое связывает с томом ниже
               mountPath: /dev/ttyS0 # Путь ВНУТРИ контейнера
           name: srne-adaptor-service
+          livenessProbe:
+            exec:
+              command:
+              - python3 
+              - health_check.py 
+            initialDelaySeconds: 30 
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 10 
+            periodSeconds: 15  
+            timeoutSeconds: 10
+            failureThreshold: 3
       volumes:
         - name: tty-device       # То же самое имя, что и выше
           hostPath:

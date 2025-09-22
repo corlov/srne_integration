@@ -1,5 +1,8 @@
 docker build -t complex_api .
 
+если сразу в репозиторий:
+    docker build -t localhost:5000/complex_api:latest .
+
 docker run -d --restart always --name complex-api-service -p 5011:5011 \
     -e DB_HOST=192.168.1.83 \
     -e DB_PORT=5432 \

@@ -44,6 +44,32 @@ def normal_blink():
     time.sleep(0.5)
 
 
+
+LOG_PATH = 'logs'
+MAIN_LOG_FILE = 'app.log'
+
+
+def logmsg(message, level="INFO"): 
+    from datetime import datetime
+
+    log_file = os.path.join(LOG_PATH, MAIN_LOG_FILE)
+    if os.path.exists(log_file):
+        size_limit = 1024*1024*30  # 30Mb
+        file_size = os.path.getsize(log_file)
+        if file_size > size_limit:
+            try:
+                os.remove(log_file)
+            except:
+                print(f"cant remove the log file")
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}] [{level.upper()}]: {message}"
+    print(log_entry)    
+    if log_file:
+        with open(log_file, 'a', encoding='utf-8') as f:
+            f.write(log_entry + '\n')
+
+
 def init():
     global PIN_OUT_K2_TRAFFICLIGHT
 
@@ -60,6 +86,10 @@ def init():
 
     PIN_OUT_K2_TRAFFICLIGHT = db.get_pin_by_code('PIN_OUT_K2_TRAFFICLIGHT')
 
+    if not os.path.exists(LOG_PATH):
+        os.makedirs(LOG_PATH)
+        logmsg('started')
+
 
 
 def main():
@@ -72,10 +102,16 @@ def main():
     hold_prev_voltage = False
 
     current_mode = mode
+    prev_time = time.time()
 
     while True:
         k += 1
         time.sleep(0.001)
+
+        if time.time() - prev_time > 60:
+            logmsg('tick')
+            prev_time = time.time()
+
         if k > 10:
             mode = db.get_actual_mode()
             print(mode)

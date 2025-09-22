@@ -60,24 +60,32 @@ export default function TabsPage({
           
           <div className="header-right">
           <div>{wifiMessage}</div>
-            Лампа:
-            <button className="logout-btn" onClick={() => loadControlClick(1)}>Вкл.</button>
-            <button className="logout-btn" onClick={() => loadControlClick(0)}>Откл.</button>
-            WiFi:
-            <button className="logout-btn" onClick={() => wifiModeHandler(true)}>On</button>
-            <button className="logout-btn" onClick={() => wifiModeHandler(false)}>Off</button>
+            {authData.role === 'operator' && (
+                <>
+                Лампа:
+                <button className="logout-btn" onClick={() => loadControlClick(1)}>Вкл.</button>
+                <button className="logout-btn" onClick={() => loadControlClick(0)}>Откл.</button>
+                WiFi:
+                <button className="logout-btn" onClick={() => wifiModeHandler(true)}>On</button>
+                <button className="logout-btn" onClick={() => wifiModeHandler(false)}>Off</button>
+                </>
+            )}
             [Пользователь: <b>{authData.username},</b> дата входа: {loginDatetime}]
             <button className="logout-btn" onClick={logoutUser}>Выход</button>
           </div>
           
         </header>
 
-     
+
+{/* whatcher
+admin
+operator
+engineer      */}
   
         <div className="tabs-container">
           <aside className="tabs-sidebar" aria-label="Меню">
             <nav>
-              {authData.username === 'admin' ? (
+              {authData.role === 'admin' ? (
                 <ul>                
                   <li>
                     <NavLink to="state" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
@@ -92,7 +100,7 @@ export default function TabsPage({
                 </ul>
               ) : null}
 
-              {authData.username === 'user' ? (
+              {authData.role === 'operator' ? (
                 <ul>
                   <li>
                       <hr/>

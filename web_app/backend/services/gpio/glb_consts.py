@@ -11,3 +11,5 @@ RK_WIFI_OFF_REQ = 'wifi_activate_off_request'
 RK_WIFI_TS = 'wifi_activate_ts'
 RK_WIFI_ERROR = 'wifi_error_text'
 RK_WIFI_ERROR_DETAILS = 'wifi_error_text_details'
+
+HEARTBEAT_UPD_TIMEOUT = 3*60

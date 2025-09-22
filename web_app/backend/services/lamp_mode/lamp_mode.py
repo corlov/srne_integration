@@ -68,6 +68,31 @@ def apply_mode(mode_complex, mode_controller):
         db.event_log_add(f'Нераспознаный режим {mode_complex}', 'lamp control daemon', 'ERROR', 'ERROR')
 
 
+LOG_PATH = 'logs'
+MAIN_LOG_FILE = 'app.log'
+
+
+def logmsg(message, level="INFO"): 
+    from datetime import datetime
+
+    log_file = os.path.join(LOG_PATH, MAIN_LOG_FILE)
+    if os.path.exists(log_file):
+        size_limit = 1024*1024*30  # 30Mb
+        file_size = os.path.getsize(log_file)
+        if file_size > size_limit:
+            try:
+                os.remove(log_file)
+            except:
+                print(f"cant remove the log file")
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = f"[{timestamp}] [{level.upper()}]: {message}"
+    print(log_entry)    
+    if log_file:
+        with open(log_file, 'a', encoding='utf-8') as f:
+            f.write(log_entry + '\n')
+
+
 
 def init():
     global PIN_OUT_K3_LAMP
@@ -85,6 +110,10 @@ def init():
 
     PIN_OUT_K3_LAMP = db.get_pin_by_code('PIN_OUT_K3_LAMP')
 
+    if not os.path.exists(LOG_PATH):
+        os.makedirs(LOG_PATH)
+        logmsg('started v.1.0.0')
+
 
 
 def main():
@@ -93,8 +122,13 @@ def main():
     mode_complex, mode_controller = db.get_actual_mode()
     apply_mode(mode_complex, mode_controller)
     current_mode = mode_complex
+    prev_time = time.time()
     while True:
         time.sleep(1)
+
+        if time.time() - prev_time > 60:
+            logmsg('tick')
+            prev_time = time.time()
 
         mode_complex, mode_controller = db.get_actual_mode()
         print(mode_complex, mode_controller)

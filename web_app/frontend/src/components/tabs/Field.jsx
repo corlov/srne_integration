@@ -43,7 +43,16 @@ function Field({ setting, onSave }) {
   };
 
   return (
+    
+    <>
+    {setting.param === 'PIN_OUT_K2_TRAFFICLIGHT' && (
+      <div>
+        <i><b>GPIO номера разьемов для подключения (изменения вступят в силу только после перезагрузки АК)</b></i>
+      </div>
+      )}
     <div className="field-grid">
+      
+
       {setting.type === "boolean" ? (
         <div className="field-grid__label-inline" />
       ) : (
@@ -94,6 +103,7 @@ function Field({ setting, onSave }) {
         </button>
       </div>
     </div>
+    </>
   );
 }
 

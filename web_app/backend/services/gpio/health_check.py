@@ -10,7 +10,7 @@ try:
     modification_time = os.path.getmtime(os.path.join(u.LOG_PATH, u.MAIN_LOG_FILE))
     current_timestamp = time.time()    
     delta = current_timestamp - modification_time
-    if delta > 5*60:
+    if delta > glb.HEARTBEAT_UPD_TIMEOUT * 2:
         print('timeout file change overflow')
         sys.exit(2)
     print('chk 1 [ok]')
