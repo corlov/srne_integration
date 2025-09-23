@@ -76,6 +76,15 @@ kubectl get nodes -o wide
     kubectl get deployments
     kubectl rollout restart deployment service-gpio
 
+
+HTTPS:
+    openssl req -x509 -newkey rsa:4096 -nodes -keyout key.pem -out cert.pem -days 365
+    kubectl create secret tls solar-tls-secret --cert=cert.pem --key=key.pem
+
+Для доступа к интерфейсу с локальной машины нужно: Либо запустить бекенд в режиме работы по http (NodePort) и исправить адрес бекенда
+    1. поправить файл /etc/hosts на локальной машине 
+    2. зайти и принять сертификат в браузере https://solar.local
+
 ================================================================================
 Общая схема разворячивания с ноля на расбери:
 

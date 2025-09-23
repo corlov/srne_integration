@@ -1,0 +1,22 @@
+# Ignore Python cache directories
+services/api/__pycache__/
+services/api/common/__pycache__/
+services/api/system/__pycache__/
+services/gpio/__pycache__/
+services/lamp_mode/__pycache__/
+services/srne_adaptor/__pycache__/
+services/trafficlight_mode/__pycache__/
+services/wifi_hotspot_service/__pycache__/
+
+
+# Ignore directories
+services/api/dev/
+services/api/etc/
+services/api/var/
+services/srne_adaptor/logs/
+services/srne_adaptor/solar_monitor.log
+
+
+# Ignore all .log files recursively
+*.log
+services/wifi_hotspot_service/wifi.log

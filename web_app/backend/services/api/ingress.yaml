@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: solar-api-ingress
+  annotations:
+    # Эта аннотация может понадобиться для Traefik, чтобы он правильно работал
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  tls:
+  - hosts:
+      - solar.local # Вымышленное доменное имя для нашей системы
+    secretName: solar-tls-secret # Используем секрет, созданный на шаге 2
+  rules:
+  - host: solar.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: service-api # Имя твоего сервиса API
+            port:
+              number: 5011 # Порт твоего сервиса API
+

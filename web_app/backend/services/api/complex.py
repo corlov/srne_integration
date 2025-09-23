@@ -29,17 +29,28 @@ from decorators import auth_required
 app = Flask(__name__)
 CORS(app)
 
-# TODO: активировать защиту CSRF
-# app.config['SECRET_KEY'] = glb.SECRET_KEY
-# template_dir = os.path.abspath('./templates')
-# app.template_folder = template_dir
-# csrf = CSRFProtect(app)
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(gpio_bp, url_prefix='/gpio')
 app.register_blueprint(notify_bp, url_prefix='/notify')
 app.register_blueprint(charts_bp, url_prefix='/charts')
 
+
+# TODO: активировать защиту CSRF
+# app.config['SECRET_KEY'] = glb.SECRET_KEY
+# template_dir = os.path.abspath('./templates')
+# app.template_folder = template_dir
+
+# # --- НАСТРОЙКА CSRF ДЛЯ SPA ---
+# # Указываем, что токен должен искаться в заголовке X-CSRFToken
+# app.config['WTF_CSRF_HEADER_NAME'] = 'X-CSRFToken'
+# # Указываем, что токен будет передаваться через cookie
+# app.config['WTF_CSRF_TIME_LIMIT'] = 600 # Время жизни токена (1 час)
+# app.config['WTF_CSRF_SSL_STRICT'] = False # Для разработки, если у тебя нет HTTPS
+# csrf = CSRFProtect(app)
+
+# csrf.exempt(gpio_bp)
+# csrf.exempt(charts_bp)
 
 
 # Handle CSRF errors gracefully
@@ -215,20 +226,23 @@ def wifi_set():
 
 @app.route('/healthz', methods=['GET'])
 def health_check():
+    try:
+        import redis
+        r = redis.StrictRedis(host=im.REDIS_ADDR, port=im.REDIS_PORT, db=0)
+        r.set('api_ping', time.time())
+        val = r.get('api_ping')
+        if not val:
+            return jsonify({"status": "error", "details": "redis read error"}), 503
+
+        pin = db.get_pin_by_code('PIN_OUT_K3_LAMP')
+        if not pin:
+            jsonify({"status": "error", "details": "db read error"}), 503
+    except Exception as e:
+        return jsonify({"status": "error", "details": f"{str(e)}"}), 503
+
     return jsonify({"healthZ-status": "OK"}), 200
-    #return jsonify({"status": "error", "details": "database is down"}), 503
 
 
-# @app.route('/create_user', methods=['GET'])
-# @auth_required
-# def create_user():
-#     if g.token_data.get('role') not in ['operator', 'admin']:
-#         return ''
-
-#     username = request.args.get("username")
-#     password = request.args.get("password")
-    
-#     return jsonify({'success': True})
 
 
 def init():
@@ -260,5 +274,13 @@ if __name__ == '__main__':
     init()
     # app.run(host='0.0.0.0', port=5011)
     # debug=True включает и отладчик, и reloader
+    
     app.run(host='0.0.0.0', port=5011, debug=True)
+
+    # app.run(
+    #     host='0.0.0.0',
+    #     port=5011,
+    #     debug=True,
+    #     ssl_context=('cert.pem', 'key.pem') # <-- Добавляем SSL-контекст
+    # )
 

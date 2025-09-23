@@ -8,12 +8,13 @@ metadata:
     io.kompose.service: service-api
   name: service-api
 spec:
-  type: NodePort
+  type: ClusterIP # NodePort (если фронт и бек будут по хттп общаться)
   ports:
     - name: "5011"
+      protocol: TCP
       port: 5011
       targetPort: 5011
-      nodePort: 31000
+      # nodePort: 31000
   selector:
     io.kompose.service: service-api
 
