@@ -384,3 +384,33 @@ def get_pin_by_code(code):
 
 
 
+def upsert_user(username, password, rolename):
+    try:
+        with _get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+
+            query = "SELECT id FROM device.complex_role WHERE name = %s;"
+            cur.execute(query, (rolename,))
+            result = cur.fetchone()
+            if result:
+                if not result['id']:
+                    return 'role is not found'
+            else:
+                return 'role is not found'
+
+            upsert_query = """
+                INSERT INTO device.complex_user (name, hashed_password, role_id)
+                    VALUES (%s, %s, %s)
+                ON CONFLICT (name) DO UPDATE
+                SET hashed_password = EXCLUDED.hashed_password, role_id = EXCLUDED.role_id;
+            """
+            cur.execute(upsert_query, (username, password.decode('utf-8'), result['id']))
+            conn.commit()
+            
+            return ''
+    except Exception as e:
+        return str(e)
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()

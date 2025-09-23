@@ -1,0 +1,13 @@
+[Unit]
+Description=инициализация пинов отложенная
+# Эта строка гарантирует, что сервис запустится только после того, как поднимется сеть
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /root/solar/services/init/update_gpio_numbers.py
+RemainAfterExit=true
+User=root
+
+[Install]
+WantedBy=multi-user.target

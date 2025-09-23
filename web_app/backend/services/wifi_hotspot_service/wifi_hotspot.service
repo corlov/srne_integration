@@ -1,0 +1,14 @@
+[Unit]
+Description=Wifi on/off hotspot
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /root/solar/services/wifi_hotspot_service/wifi_hotspot.py
+WorkingDirectory=/root/solar/services/wifi_hotspot_service      
+StandardOutput=journal
+StandardError=journal
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

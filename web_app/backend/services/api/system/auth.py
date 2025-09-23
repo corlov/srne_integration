@@ -1,5 +1,5 @@
 from flask import Blueprint
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, g
 from flask_cors import CORS
 import jwt
 import datetime
@@ -11,6 +11,8 @@ import bcrypt
 import psycopg2
 from psycopg2 import sql
 import psycopg2.extras
+from decorators import auth_required
+import re
 
 import common.db as db
 import common.glb_consts as glb
@@ -65,3 +67,39 @@ def login():
         return jsonify(message=f'Exception (stage 2): {e}'), 401
 
     return jsonify(message='Invalid credentials'), 401
+
+
+def is_username_valid(username):
+    # Define a regex pattern for valid characters
+    pattern = r'^[a-zA-Z0-9_]+$'  # Only allows letters, digits, and underscores
+
+    # Check if the username matches the pattern
+    if re.match(pattern, username):
+        return True
+    else:
+        return False
+
+
+
+@auth_bp.route('/upsert_user', methods=['GET'])
+@auth_required
+def create_user():
+    if g.token_data.get('role') not in ['operator', 'admin']:
+        return jsonify(message='permission denied'), 401
+
+    username = request.args.get("username")
+    if not is_username_valid(username):
+        return jsonify(message='incorrect username'), 401
+
+    password = request.args.get("password")
+    rolename = request.args.get("role")
+
+    password_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password_bytes, salt)
+
+    err_text = db.upsert_user(username, hashed_password, rolename)
+    if err_text:
+        return jsonify(message=err_text), 401
+    
+    return jsonify(message='OK'), 200

@@ -219,6 +219,17 @@ def health_check():
     #return jsonify({"status": "error", "details": "database is down"}), 503
 
 
+# @app.route('/create_user', methods=['GET'])
+# @auth_required
+# def create_user():
+#     if g.token_data.get('role') not in ['operator', 'admin']:
+#         return ''
+
+#     username = request.args.get("username")
+#     password = request.args.get("password")
+    
+#     return jsonify({'success': True})
+
 
 def init():
     im.REDIS_ADDR = os.getenv('REDIS_HOST', 'localhost')
