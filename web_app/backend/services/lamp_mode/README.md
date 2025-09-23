@@ -1,12 +1,31 @@
-docker build -t lamp_mode .
+### Обеспечивает режим работы нагрузки (лампы)
 
-Затем, если под кубером:
-    docker tag lamp_mode:latest localhost:5000/lamp_mode:latest
-    docker push localhost:5000/lamp_mode:latest 
-    kubectl rollout restart deployment service-lamp-mode
+  
+
+***<ИМЯ_ОБРАЗА>=lamp_mode***
 
 
-Если под докером:
+**Локально собрать образ**
+
+> docker build -t <ИМЯ_ОБРАЗА> .
+
+
+
+**Затем, если под k3s:**
+
+> docker tag <ИМЯ_ОБРАЗА>:latest localhost:5000/<ИМЯ_ОБРАЗА>:latest
+
+> docker push localhost:5000/<ИМЯ_ОБРАЗА>:latest
+
+> kubectl rollout restart deployment service-<ИМЯ_ОБРАЗА>
+
+или
+
+> kubectl apply -f . -R
+
+  
+
+Если под докером хотим запустить:
 
     docker run -d --restart always --name lamp-mode-service \
         -e DEVICE_ID=2 \
@@ -25,30 +44,3 @@ docker build -t lamp_mode .
     docker logs -f lamp-mode-service
 
 
-
-
-
-
-
-docker run --rm -it --entrypoint /bin/bash localhost:5000/lamp_mode:latest
-
-
-
-
-
-<none>                              <none>    aeae7e94091a   5 minutes ago    366MB
-localhost:5000/traffic_light_mode   <none>    53f8ae39f041   43 minutes ago   366MB
-localhost:5000/traffic_light_mode   <none>    e20ea5671103   3 hours ago      366MB
-<none>                              <none>    7a5b1258ec1e   3 hours ago      366MB
-localhost:5000/complex_api          <none>    92d14315cf39   3 days ago       373MB
-lamp_mode                           latest    5297f3a25ced   3 days ago       366MB
-localhost:5000/lamp_mode            latest    5297f3a25ced   3 days ago       366MB
-gpio                                latest    0b2fea03154e   3 days ago       601MB
-localhost:5000/gpio                 <none>    0b2fea03154e   3 days ago       601MB
-trafficlight_mode                   latest    8774c7fad6f1   4 days ago       366MB
-localhost:5000/trafficlight_mode    latest    8774c7fad6f1   4 days ago       366MB
-registry                            2         33eeff39e0aa   24 months ago    25MB
-
-
-
-docker rmi aeae7e94091a 53f8ae39f041 e20ea5671103 7a5b1258ec1e 92d14315cf39 5297f3a25ced 5297f3a25ced 0b2fea03154e 0b2fea03154e 8774c7fad6f1 8774c7fad6f1 33eeff39e0aa

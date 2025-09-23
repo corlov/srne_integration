@@ -1,12 +1,31 @@
-docker build -t traffic_light_mode .
+### Режим работ светофора
 
-Затем, если под кубером:
-    docker tag traffic_light_mode:latest localhost:5000/traffic_light_mode:latest
-    docker push localhost:5000/traffic_light_mode:latest 
-    kubectl rollout restart deployment service-trafficlight-mode
+*** ВАЖНО: осторожнее м.б. путаница в названии имен через - или _ ***
+
+***<ИМЯ_ОБРАЗА>=traffic_light_mode***
 
 
-Если под докером:
+**Локально собрать образ**
+
+> docker build -t <ИМЯ_ОБРАЗА> .
+
+
+
+**Затем, если под k3s:**
+
+> docker tag <ИМЯ_ОБРАЗА>:latest localhost:5000/<ИМЯ_ОБРАЗА>:latest
+
+> docker push localhost:5000/<ИМЯ_ОБРАЗА>:latest
+
+> kubectl rollout restart deployment service-<ИМЯ_ОБРАЗА>
+
+или
+
+> kubectl apply -f . -R
+
+  
+
+Если под докером хотим запустить:
 
 
     docker run -d --restart always --name traf-ligth-mode-service \

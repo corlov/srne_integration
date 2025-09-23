@@ -1,9 +1,31 @@
-docker build -t gpio .
+### Общение по ГПИО в частности с БУ
 
-Затем, если под кубером:
-    docker tag gpio:latest localhost:5000/gpio:latest
-    docker push localhost:5000/gpio:latest 
-    kubectl rollout restart deployment service-gpio    или     kubectl apply -f . -R
+  
+
+***<ИМЯ_ОБРАЗА>=gpio***
+
+
+**Локально собрать образ**
+
+> docker build -t <ИМЯ_ОБРАЗА> .
+
+
+
+**Затем, если под k3s:**
+
+> docker tag <ИМЯ_ОБРАЗА>:latest localhost:5000/<ИМЯ_ОБРАЗА>:latest
+
+> docker push localhost:5000/<ИМЯ_ОБРАЗА>:latest
+
+> kubectl rollout restart deployment service-<ИМЯ_ОБРАЗА>
+
+или
+
+> kubectl apply -f . -R
+
+  
+
+Если под докером хотим запустить:
 
 docker run -d --restart always --privileged --name gpio-service -v /sys:/sys \
     -e DB_HOST=192.168.1.83 \
