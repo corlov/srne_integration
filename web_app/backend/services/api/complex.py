@@ -275,6 +275,7 @@ if __name__ == '__main__':
     # app.run(host='0.0.0.0', port=5011)
     # debug=True включает и отладчик, и reloader
     
+    print("!!!!!!!!!!!!!! NEW VERSION DEPLOYED VIA GITHUB ACTIONS !!!!!!!!!!!!!!")
     app.run(host='0.0.0.0', port=5011, debug=True)
 
     # app.run(
