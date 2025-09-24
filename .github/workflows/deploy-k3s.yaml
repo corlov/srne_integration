@@ -41,7 +41,7 @@ jobs:
           docker build -t localhost:5000/complex_api:${{ github.sha }} ./web_app/backend/services/api
           docker push localhost:5000/complex_api:${{ github.sha }}
           export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-          kubectl set image deployment/service-api service-api=localhost:5000/complex_api:${{ github.sha }}
+          kubectl set image deployment/service-api complex-api-service=localhost:5000/complex_api:${{ github.sha }}
 
           
 # name: Deploy Solar Project
