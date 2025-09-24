@@ -27,6 +27,18 @@ jobs:
           echo "List of all changed files:"
           echo "${{ steps.changed-files.outputs.all_changed_files }}"
 
+      # --- НОВЫЙ, СУПЕР-ВАЖНЫЙ ОТЛАДОЧНЫЙ ШАГ ---
+      - name: DEBUG - Inspect workspace before build
+        run: |
+          echo ">>> Current directory:"
+          pwd
+          echo ">>> Listing all files in workspace recursively:"
+          ls -laR
+          echo ">>> Displaying content of complex.py BEFORE build:"
+          echo "----------------------------------------------------"
+          cat ./web_app/backend/services/api/complex.py
+          echo "----------------------------------------------------"
+
       # ==================================================================
       # ===               БЭКЕНД: KUBERNETES СЕРВИСЫ                   ===
       # ==================================================================
