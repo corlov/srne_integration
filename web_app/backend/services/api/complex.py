@@ -270,9 +270,9 @@ def init():
     glb.PIN_IN_WIFI_BUTTON = db.get_pin_by_code('PIN_IN_WIFI_BUTTON')
 
 
-@app.route('/version')
+@app.route('/version', methods=['GET'])
 def get_version():
-    return {"version_app": APP_VERSION, "time": time.time()}
+    return jsonify({"version_app": APP_VERSION, "time": time.time()}), 200
 
 
 if __name__ == '__main__':
