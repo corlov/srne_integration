@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 2 # <-- ДОБАВЬ ЭТО
 
       # --- НОВЫЙ ОТЛАДОЧНЫЙ ШАГ ---
       - name: DEBUG - List changed files
