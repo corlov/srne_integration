@@ -13,6 +13,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # --- НОВЫЙ ОТЛАДОЧНЫЙ ШАГ ---
+      - name: DEBUG - List changed files
+        run: |
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "--- Modified files ---"
+          echo "${{ join(github.event.head_commit.modified, '\n') }}"
+          echo "--- Added files ---"
+          echo "${{ join(github.event.head_commit.added, '\n') }}"
+          echo "--- Removed files ---"
+          echo "${{ join(github.event.head_commit.removed, '\n') }}"
+          echo "----------------------"
+          echo "Full modified string for IF condition:"
+          echo "${{ join(github.event.head_commit.modified, '') }}"
+
       # ==================================================================
       # ===               БЭКЕНД: KUBERNETES СЕРВИСЫ                   ===
       # ==================================================================
