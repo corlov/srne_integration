@@ -1,0 +1,1035 @@
+openapi: 3.0.3
+info:
+  title: SRNE RESTFULL API
+  version: "1.0"
+servers:
+- url: https://<REPKA_PI_ADDR>:8080/v1
+paths:
+  /clear_history:
+    post:
+      description: очистить всю историю на устройстве (флеш память)
+      operationId: clear_history_post
+      parameters:
+      - description: id устройства
+        explode: true
+        in: query
+        name: deviceId
+        required: true
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_clear_history_post_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /command_status:
+    get:
+      description: Асинхронно получить статус отправленной ранее команды
+      operationId: command_status_get
+      parameters:
+      - description: uuid отправленной ранее команды
+        explode: true
+        in: query
+        name: uuid
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_command_status_get_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /control_load_on_off:
+    post:
+      description: включить или выкл. нагрузку запитаную от АКБ
+      operationId: control_load_on_off_post
+      parameters:
+      - description: id устройства
+        explode: true
+        in: query
+        name: deviceId
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: "вкл = ИСТИНА, выкл = ЛОЖЬ"
+        explode: true
+        in: query
+        name: "on"
+        required: true
+        schema:
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_clear_history_post_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /dynamic_data:
+    get:
+      description: текущее состояние параметров контроллера
+      operationId: dynamic_data_get
+      parameters:
+      - description: id устройства
+        explode: true
+        in: query
+        name: deviceId
+        required: true
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_dynamic_data_get_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /history:
+    get:
+      description: история за определенную дату
+      operationId: history_get
+      parameters:
+      - description: id устройства
+        explode: true
+        in: query
+        name: deviceId
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: За какую дату отдать значения параметров
+        explode: true
+        in: query
+        name: date
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_history_get_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /reset_to_factory_default_settings:
+    post:
+      description: Сброс всех настроек в по-умолчанию зашитых производителем
+      operationId: reset_to_factory_default_settings_post
+      parameters:
+      - description: id устройства
+        explode: true
+        in: query
+        name: deviceId
+        required: true
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_clear_history_post_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /set_charge_current:
+    post:
+      description: установка тока зарядки
+      operationId: set_charge_current_post
+      parameters:
+      - description: id устройства
+        explode: true
+        in: query
+        name: deviceId
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: "значения силы тока в амперах (A general rule of thumb is to\
+          \ use a charging current of around 10% of the battery's capacity for optimal\
+          \ and safe charging. For example, a 50 Ah battery would ideally be charged\
+          \ with a current of around 5 amps. )"
+        explode: true
+        in: query
+        name: currentValue
+        required: true
+        schema:
+          example: 0.45
+          type: number
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_clear_history_post_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /set_load_working_mode:
+    post:
+      description: Режим работы устройства
+      operationId: set_load_working_mode_post
+      parameters:
+      - description: id устройства
+        explode: true
+        in: query
+        name: deviceId
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: значенияч от 0 до 17 включительно (18 режимов всего)
+        explode: true
+        in: query
+        name: modeCode
+        required: true
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_clear_history_post_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /set_parameters:
+    post:
+      description: Установка параметров работы устройства
+      operationId: set_parameters_post
+      parameters:
+      - description: id устройства
+        explode: true
+        in: query
+        name: deviceId
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: overVoltageThreshold
+        required: true
+        schema:
+          type: number
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: chargingLimitVoltage
+        required: true
+        schema:
+          type: number
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: equalizingChargingVoltage
+        required: true
+        schema:
+          type: number
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: boostChargingVoltage
+        required: true
+        schema:
+          type: number
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: floatingChargingVoltage
+        required: true
+        schema:
+          type: number
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: boostChargingRecovery
+        required: true
+        schema:
+          type: number
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: overDischargeRecovery
+        required: true
+        schema:
+          type: number
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: underVoltageThreshold
+        required: true
+        schema:
+          type: number
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: overDischargeVoltage
+        required: true
+        schema:
+          type: number
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: overDischargeLimitVoltage
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: endOfChargeAndDischargeCapacity
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: overDischargeTimeDelay
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: equalizingChargingTime
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: boostChargingTime
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: equalizingChargingInterval
+        required: true
+        schema:
+          type: integer
+        style: form
+      - description: ""
+        explode: true
+        in: query
+        name: temperatureCompensation
+        required: true
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_clear_history_post_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /settings:
+    get:
+      description: считать текущие настройки
+      operationId: settings_get
+      parameters:
+      - description: id устройства
+        explode: true
+        in: query
+        name: deviceId
+        required: true
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_settings_get_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+  /system_info:
+    get:
+      description: System information
+      operationId: system_info_get
+      parameters:
+      - description: id устройства
+        explode: true
+        in: query
+        name: deviceId
+        required: true
+        schema:
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_system_info_get_200_response'
+          description: OK
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+components:
+  schemas:
+    _history_get_200_response:
+      example:
+        message:
+          chargingAmpHrs: 0.8008281904610115
+          dischargingAmpHrs: 5.637376656633329
+          powerConsumption: 5.962133916683182
+          powerGeneration: 6.027456183070403
+          maxBatteryVoltage: 2.3021358869347655
+          maxChargingPower: 1.4658129805029452
+          currentDayMinBatteryVoltage: 2.027123023002322
+          maxChargingCurrent: 7.061401241503109
+          maxDischargingPower: 9.301444243932576
+          maxDischargingCurrent: 3.616076749251911
+      properties:
+        message:
+          $ref: '#/components/schemas/_history_get_200_response_message'
+      title: _history_get_200_response
+      type: object
+    _dynamic_data_get_200_response_message_controller:
+      example:
+        overDischarges: 1.7
+        chargingMode: "OFF"
+        fullCharges: 1.7
+        temperature: 1.7
+        days: 1.7
+      properties:
+        days:
+          example: 1.7
+          title: days
+          type: number
+        fullCharges:
+          example: 1.7
+          title: fullCharges
+          type: number
+        temperature:
+          example: 1.7
+          title: temperature
+          type: number
+        chargingMode:
+          example: "OFF"
+          title: chargingMode
+          type: string
+        overDischarges:
+          example: 1.7
+          title: overDischarges
+          type: number
+      title: _dynamic_data_get_200_response_message_controller
+      type: object
+    _history_get_200_response_message:
+      example:
+        chargingAmpHrs: 0.8008281904610115
+        dischargingAmpHrs: 5.637376656633329
+        powerConsumption: 5.962133916683182
+        powerGeneration: 6.027456183070403
+        maxBatteryVoltage: 2.3021358869347655
+        maxChargingPower: 1.4658129805029452
+        currentDayMinBatteryVoltage: 2.027123023002322
+        maxChargingCurrent: 7.061401241503109
+        maxDischargingPower: 9.301444243932576
+        maxDischargingCurrent: 3.616076749251911
+      properties:
+        chargingAmpHrs:
+          title: chargingAmpHrs
+          type: number
+        powerGeneration:
+          title: powerGeneration
+          type: number
+        maxChargingPower:
+          title: maxChargingPower
+          type: number
+        powerConsumption:
+          title: powerConsumption
+          type: number
+        dischargingAmpHrs:
+          title: dischargingAmpHrs
+          type: number
+        maxBatteryVoltage:
+          title: maxBatteryVoltage
+          type: number
+        maxChargingCurrent:
+          title: maxChargingCurrent
+          type: number
+        maxDischargingPower:
+          title: maxDischargingPower
+          type: number
+        maxDischargingCurrent:
+          title: maxDischargingCurrent
+          type: number
+        currentDayMinBatteryVoltage:
+          title: currentDayMinBatteryVoltage
+          type: number
+      title: _history_get_200_response_message
+      type: object
+    _settings_get_200_response_message:
+      example:
+        underVoltageWarningLevel: 2
+        boostchargingRecoveryVoltage: 7
+        boostChargingTime: 0
+        battery:
+          chargingVoltageLimit: 1
+          nominalBatteryCapacity: 1
+          boostchargingVoltage: 1
+          systemVoltageSetting: 7
+          recognizedVoltage: 1
+          floatingChargingVoltage: 4
+          equalizingChargingVoltage: 5
+          overVoltageThreshold: 6
+          batteryType: batteryType
+        dischargingLimitVoltage: 5
+        loadWorkingMode: loadWorkingMode
+        overDischargeRecoveryVoltage: 3
+        temperatureCompensationFactor: 2
+        overDischargeVoltage: 6
+        equalizingChargingTime: 5
+        lightControl:
+          lightControlDelay: 4
+          specialPowerControl:
+            chargingMethod: chargingMethod
+            eachNightOnFunctionEnabled: true
+            specialPowerControlFunctionEnabled: true
+            noChargingBelowZero: true
+          lightControlVoltage: 7
+        overDischareTimeDelay: 1
+        equalizingChargingInterval: 9
+      properties:
+        loadWorkingMode:
+          title: loadWorkingMode
+          type: string
+        boostChargingTime:
+          title: boostChargingTime
+          type: integer
+        overDischargeVoltage:
+          title: overDischargeVoltage
+          type: integer
+        overDischareTimeDelay:
+          title: overDischareTimeDelay
+          type: integer
+        equalizingChargingTime:
+          title: equalizingChargingTime
+          type: integer
+        dischargingLimitVoltage:
+          title: dischargingLimitVoltage
+          type: integer
+        underVoltageWarningLevel:
+          title: underVoltageWarningLevel
+          type: integer
+        boostchargingRecoveryVoltage:
+          title: boostchargingRecoveryVoltage
+          type: integer
+        equalizingChargingInterval:
+          title: equalizingChargingInterval
+          type: integer
+        overDischargeRecoveryVoltage:
+          title: overDischargeRecoveryVoltage
+          type: integer
+        temperatureCompensationFactor:
+          title: temperatureCompensationFactor
+          type: integer
+        lightControl:
+          $ref: '#/components/schemas/_settings_get_200_response_message_lightControl'
+        battery:
+          $ref: '#/components/schemas/_settings_get_200_response_message_battery'
+      title: _settings_get_200_response_message
+      type: object
+    _dynamic_data_get_200_response_message_load:
+      example:
+        volts: 1.7
+        amps: 1.7
+        watts: 1.7
+        maxAmps: 1.7
+        dailyAmpHours: 1.7
+        totalAmpHours: 1.7
+        state: false
+        dailyPower: 1.7
+        totalPower: 1.7
+      properties:
+        amps:
+          example: 1.7
+          title: amps
+          type: number
+        state:
+          example: false
+          title: state
+          type: boolean
+        volts:
+          example: 1.7
+          title: volts
+          type: number
+        watts:
+          example: 1.7
+          title: watts
+          type: number
+        maxAmps:
+          example: 1.7
+          title: maxAmps
+          type: number
+        dailyPower:
+          example: 1.7
+          title: dailyPower
+          type: number
+        totalPower:
+          example: 1.7
+          title: totalPower
+          type: number
+        dailyAmpHours:
+          example: 1.7
+          title: dailyAmpHours
+          type: number
+        totalAmpHours:
+          example: 1.7
+          title: totalAmpHours
+          type: number
+      title: _dynamic_data_get_200_response_message_load
+      type: object
+    _system_info_get_200_response:
+      example:
+        message:
+          deviceType: deviceType
+          serialNumber: serialNumber
+          maxSupportVoltage: 0.8008281904610115
+          ratedDischargeCurrent: 1.4658129805029452
+          model: model
+          hardwareVersion: hardwareVersion
+          retedChargingCurrent: 6.027456183070403
+          softwareVersion: softwareVersion
+      properties:
+        message:
+          $ref: '#/components/schemas/_system_info_get_200_response_message'
+      title: _system_info_get_200_response
+      type: object
+    _dynamic_data_get_200_response_message_charging:
+      example:
+        amps: 1.7
+        watts: 1.7
+        maxAmps: 1.7
+        dailyAmpHours: 47
+        totalAmpHours: 47
+        maxWatts: 25
+        dailyPower: 47
+        totalPower: 47
+      properties:
+        amps:
+          example: 1.7
+          title: amps
+          type: number
+        watts:
+          example: 1.7
+          title: watts
+          type: number
+        maxAmps:
+          example: 1.7
+          title: maxAmps
+          type: number
+        maxWatts:
+          example: 25
+          title: maxWatts
+          type: number
+        dailyPower:
+          example: 47
+          title: dailyPower
+          type: number
+        totalPower:
+          example: 47
+          title: totalPower
+          type: number
+        dailyAmpHours:
+          example: 47
+          title: dailyAmpHours
+          type: number
+        totalAmpHours:
+          example: 47
+          title: totalAmpHours
+          type: number
+      title: _dynamic_data_get_200_response_message_charging
+      type: object
+    _settings_get_200_response_message_lightControl_specialPowerControl:
+      example:
+        chargingMethod: chargingMethod
+        eachNightOnFunctionEnabled: true
+        specialPowerControlFunctionEnabled: true
+        noChargingBelowZero: true
+      properties:
+        chargingMethod:
+          title: chargingMethod
+          type: string
+        noChargingBelowZero:
+          title: noChargingBelowZero
+          type: boolean
+        eachNightOnFunctionEnabled:
+          title: eachNightOnFunctionEnabled
+          type: boolean
+        specialPowerControlFunctionEnabled:
+          title: specialPowerControlFunctionEnabled
+          type: boolean
+      title: _settings_get_200_response_message_lightControl_specialPowerControl
+      type: object
+    _settings_get_200_response_message_lightControl:
+      example:
+        lightControlDelay: 4
+        specialPowerControl:
+          chargingMethod: chargingMethod
+          eachNightOnFunctionEnabled: true
+          specialPowerControlFunctionEnabled: true
+          noChargingBelowZero: true
+        lightControlVoltage: 7
+      properties:
+        lightControlDelay:
+          title: lightControlDelay
+          type: integer
+        lightControlVoltage:
+          title: lightControlVoltage
+          type: integer
+        specialPowerControl:
+          $ref: '#/components/schemas/_settings_get_200_response_message_lightControl_specialPowerControl'
+      title: _settings_get_200_response_message_lightControl
+      type: object
+    _settings_get_200_response_message_battery:
+      example:
+        chargingVoltageLimit: 1
+        nominalBatteryCapacity: 1
+        boostchargingVoltage: 1
+        systemVoltageSetting: 7
+        recognizedVoltage: 1
+        floatingChargingVoltage: 4
+        equalizingChargingVoltage: 5
+        overVoltageThreshold: 6
+        batteryType: batteryType
+      properties:
+        batteryType:
+          title: batteryType
+          type: string
+        recognizedVoltage:
+          title: recognizedVoltage
+          type: integer
+        boostchargingVoltage:
+          title: boostchargingVoltage
+          type: integer
+        chargingVoltageLimit:
+          title: chargingVoltageLimit
+          type: integer
+        overVoltageThreshold:
+          title: overVoltageThreshold
+          type: integer
+        systemVoltageSetting:
+          title: systemVoltageSetting
+          type: integer
+        nominalBatteryCapacity:
+          title: nominalBatteryCapacity
+          type: integer
+        floatingChargingVoltage:
+          title: floatingChargingVoltage
+          type: integer
+        equalizingChargingVoltage:
+          title: equalizingChargingVoltage
+          type: integer
+      title: _settings_get_200_response_message_battery
+      type: object
+    _clear_history_post_200_response:
+      example:
+        message:
+          errorText: errorText
+          success: true
+      properties:
+        message:
+          $ref: '#/components/schemas/_clear_history_post_200_response_message'
+      title: _clear_history_post_200_response
+      type: object
+    _dynamic_data_get_200_response_message_battery:
+      example:
+        volts: 1.7
+        stateOfCharge: 1.7
+        minVolts: 1.7
+        temperature: 1.7
+        maxVolts: 1.7
+      properties:
+        volts:
+          example: 1.7
+          title: volts
+          type: number
+        maxVolts:
+          example: 1.7
+          title: maxVolts
+          type: number
+        minVolts:
+          example: 1.7
+          title: minVolts
+          type: number
+        temperature:
+          example: 1.7
+          title: temperature
+          type: number
+        stateOfCharge:
+          example: 1.7
+          title: stateOfCharge
+          type: number
+      title: _dynamic_data_get_200_response_message_battery
+      type: object
+    _system_info_get_200_response_message:
+      example:
+        deviceType: deviceType
+        serialNumber: serialNumber
+        maxSupportVoltage: 0.8008281904610115
+        ratedDischargeCurrent: 1.4658129805029452
+        model: model
+        hardwareVersion: hardwareVersion
+        retedChargingCurrent: 6.027456183070403
+        softwareVersion: softwareVersion
+      properties:
+        maxSupportVoltage:
+          title: maxSupportVoltage
+          type: number
+        retedChargingCurrent:
+          title: retedChargingCurrent
+          type: number
+        ratedDischargeCurrent:
+          title: ratedDischargeCurrent
+          type: number
+        deviceType:
+          title: deviceType
+          type: string
+        model:
+          title: model
+          type: string
+        softwareVersion:
+          title: softwareVersion
+          type: string
+        hardwareVersion:
+          title: hardwareVersion
+          type: string
+        serialNumber:
+          title: serialNumber
+          type: string
+      title: _system_info_get_200_response_message
+      type: object
+    _settings_get_200_response:
+      example:
+        message:
+          underVoltageWarningLevel: 2
+          boostchargingRecoveryVoltage: 7
+          boostChargingTime: 0
+          battery:
+            chargingVoltageLimit: 1
+            nominalBatteryCapacity: 1
+            boostchargingVoltage: 1
+            systemVoltageSetting: 7
+            recognizedVoltage: 1
+            floatingChargingVoltage: 4
+            equalizingChargingVoltage: 5
+            overVoltageThreshold: 6
+            batteryType: batteryType
+          dischargingLimitVoltage: 5
+          loadWorkingMode: loadWorkingMode
+          overDischargeRecoveryVoltage: 3
+          temperatureCompensationFactor: 2
+          overDischargeVoltage: 6
+          equalizingChargingTime: 5
+          lightControl:
+            lightControlDelay: 4
+            specialPowerControl:
+              chargingMethod: chargingMethod
+              eachNightOnFunctionEnabled: true
+              specialPowerControlFunctionEnabled: true
+              noChargingBelowZero: true
+            lightControlVoltage: 7
+          overDischareTimeDelay: 1
+          equalizingChargingInterval: 9
+      properties:
+        message:
+          $ref: '#/components/schemas/_settings_get_200_response_message'
+      title: _settings_get_200_response
+      type: object
+    _clear_history_post_200_response_message:
+      example:
+        errorText: errorText
+        success: true
+      properties:
+        success:
+          title: success
+          type: boolean
+        errorText:
+          title: errorText
+          type: string
+      title: _clear_history_post_200_response_message
+      type: object
+    _command_status_get_200_response:
+      example:
+        errorText: errorText
+        dbId: 0
+        ok: true
+        uuid: uuid
+        ts: 6.027456183070403
+      properties:
+        dbId:
+          title: dbId
+          type: integer
+        ts:
+          title: ts
+          type: number
+        uuid:
+          title: uuid
+          type: string
+        ok:
+          title: ok
+          type: boolean
+        errorText:
+          title: errorText
+          type: string
+      title: _command_status_get_200_response
+      type: object
+    _dynamic_data_get_200_response_message:
+      example:
+        controller:
+          overDischarges: 1.7
+          chargingMode: "OFF"
+          fullCharges: 1.7
+          temperature: 1.7
+          days: 1.7
+        load:
+          volts: 1.7
+          amps: 1.7
+          watts: 1.7
+          maxAmps: 1.7
+          dailyAmpHours: 1.7
+          totalAmpHours: 1.7
+          state: false
+          dailyPower: 1.7
+          totalPower: 1.7
+        modbusError: true
+        panels:
+          volts: 1.7
+          amps: 1.7
+        charging:
+          amps: 1.7
+          watts: 1.7
+          maxAmps: 1.7
+          dailyAmpHours: 47
+          totalAmpHours: 47
+          maxWatts: 25
+          dailyPower: 47
+          totalPower: 47
+        battery:
+          volts: 1.7
+          stateOfCharge: 1.7
+          minVolts: 1.7
+          temperature: 1.7
+          maxVolts: 1.7
+        faults:
+        - faults
+        - faults
+      properties:
+        load:
+          $ref: '#/components/schemas/_dynamic_data_get_200_response_message_load'
+        faults:
+          items:
+            type: string
+          title: faults
+          type: array
+        modbusError:
+          title: modbusError
+          type: boolean
+        panels:
+          $ref: '#/components/schemas/_dynamic_data_get_200_response_message_panels'
+        battery:
+          $ref: '#/components/schemas/_dynamic_data_get_200_response_message_battery'
+        charging:
+          $ref: '#/components/schemas/_dynamic_data_get_200_response_message_charging'
+        controller:
+          $ref: '#/components/schemas/_dynamic_data_get_200_response_message_controller'
+      title: _dynamic_data_get_200_response_message
+      type: object
+    _dynamic_data_get_200_response:
+      example:
+        message:
+          controller:
+            overDischarges: 1.7
+            chargingMode: "OFF"
+            fullCharges: 1.7
+            temperature: 1.7
+            days: 1.7
+          load:
+            volts: 1.7
+            amps: 1.7
+            watts: 1.7
+            maxAmps: 1.7
+            dailyAmpHours: 1.7
+            totalAmpHours: 1.7
+            state: false
+            dailyPower: 1.7
+            totalPower: 1.7
+          modbusError: true
+          panels:
+            volts: 1.7
+            amps: 1.7
+          charging:
+            amps: 1.7
+            watts: 1.7
+            maxAmps: 1.7
+            dailyAmpHours: 47
+            totalAmpHours: 47
+            maxWatts: 25
+            dailyPower: 47
+            totalPower: 47
+          battery:
+            volts: 1.7
+            stateOfCharge: 1.7
+            minVolts: 1.7
+            temperature: 1.7
+            maxVolts: 1.7
+          faults:
+          - faults
+          - faults
+      properties:
+        message:
+          $ref: '#/components/schemas/_dynamic_data_get_200_response_message'
+      title: _dynamic_data_get_200_response
+      type: object
+    _dynamic_data_get_200_response_message_panels:
+      example:
+        volts: 1.7
+        amps: 1.7
+      properties:
+        amps:
+          example: 1.7
+          title: amps
+          type: number
+        volts:
+          example: 1.7
+          title: volts
+          type: number
+      title: _dynamic_data_get_200_response_message_panels
+      type: object

@@ -1,23 +1,37 @@
-# Step 1: Build the React app
-FROM node:16 AS build
+# --- ЭТАП 1: Сборка приложения ---
+# Берем официальный образ Node.js 18 на базе легковесного Alpine Linux
+FROM node:18-alpine AS builder
 
+# Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
-COPY package.json ./
-COPY package-lock.json ./
-#RUN npm install
-RUN yarn add
-#RUN yarn add axios
+
+# Копируем package.json и yarn.lock для установки зависимостей
+# Этот шаг кэшируется, если файлы не менялись, что ускоряет сборку
+COPY package.json yarn.lock ./
+
+# Устанавливаем зависимости
+RUN yarn install --frozen-lockfile --network-timeout 100000
+
+# Копируем все остальные файлы с исходным кодом
 COPY . .
-#RUN npm run build
-RUN yarn start
 
-# Step 2: Serve the app using a static server
-FROM nginx:alpine
+# Собираем статические файлы для продакшена
+RUN yarn build
 
-COPY --from=build /app/build /usr/share/nginx/html
+# --- ЭТАП 2: Создание финального образа ---
+# Берем официальный образ Nginx на базе Alpine Linux
+FROM nginx:1.25-alpine
 
-# Expose port 80
+# Копируем только собранные статические файлы из этапа "builder"
+# в папку, из которой Nginx раздает контент
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Копируем кастомный конфиг для Nginx (создадим его ниже)
+# Это нужно, чтобы React Router работал корректно
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Сообщаем Docker, что контейнер будет слушать порт 80
 EXPOSE 80
 
-# Start Nginx
+# Команда для запуска Nginx при старте контейнера
 CMD ["nginx", "-g", "daemon off;"]

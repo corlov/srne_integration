@@ -8,10 +8,10 @@ metadata:
 spec:
   tls:
   - hosts:
-      - solar.local # Вымышленное доменное имя для нашей системы
+      -   api.solar.local # Вымышленное доменное имя для нашей системы
     secretName: solar-tls-secret # Используем секрет, созданный на шаге 2
   rules:
-  - host: solar.local
+  - host: api.solar.local
     http:
       paths:
       - path: /

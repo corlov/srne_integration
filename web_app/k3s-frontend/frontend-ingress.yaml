@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-ingress
+spec:
+  rules:
+  - host: "solar.local" # Адрес, по которому будет доступен фронт
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service # Имя нашего сервиса
+            port:
+              number: 80 # Порт нашего сервиса

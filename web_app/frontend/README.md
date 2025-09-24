@@ -1,3 +1,18 @@
+docker build -t localhost:5000/solar-front:v1.1 .
+
+docker push localhost:5000/solar-front:v1.1
+
+kubectl set image deployment/frontend-deployment frontend-container=localhost:5000/solar-front:v1.1
+
+
+
+
+
+
+
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

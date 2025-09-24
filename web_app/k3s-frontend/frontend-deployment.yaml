@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+spec:
+  replicas: 1 # Запускаем один экземпляр нашего приложения
+  selector:
+    matchLabels:
+      app: solar-front
+  template:
+    metadata:
+      labels:
+        app: solar-front
+    spec:
+      containers:
+      - name: frontend-container
+        # Указываем образ, который мы только что загрузили
+        image: localhost:5000/solar-front:v1.1
+        imagePullPolicy: Always # Всегда проверять наличие новой версии
+        ports:
+        - containerPort: 80 # Порт, который слушает Nginx внутри контейнера

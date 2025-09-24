@@ -1,7 +1,31 @@
-docker build -t complex_api .
+### АПИ через которое общается фронт и внешние системы с нашей
 
-если сразу в репозиторий:
-    docker build -t localhost:5000/complex_api:latest .
+  
+
+***<ИМЯ_ОБРАЗА>=complex_api***
+
+
+**Локально собрать образ**
+
+> docker build -t <ИМЯ_ОБРАЗА> .
+
+
+
+**Затем, если под k3s:**
+
+> docker tag <ИМЯ_ОБРАЗА>:latest localhost:5000/<ИМЯ_ОБРАЗА>:latest
+
+> docker push localhost:5000/<ИМЯ_ОБРАЗА>:latest
+
+> kubectl rollout restart deployment service-<ИМЯ_ОБРАЗА>
+
+или
+
+> kubectl apply -f . -R
+
+  
+
+Если под докером хотим запустить:
 
 docker run -d --restart always --name complex-api-service -p 5011:5011 \
     -e DB_HOST=192.168.1.83 \
