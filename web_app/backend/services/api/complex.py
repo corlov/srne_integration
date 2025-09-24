@@ -272,7 +272,7 @@ def init():
 
 @app.route('/version')
 def get_version():
-    return {"version": APP_VERSION, "time": time.time()}
+    return {"version_app": APP_VERSION, "time": time.time()}
 
 
 if __name__ == '__main__':
