@@ -38,7 +38,7 @@ jobs:
         if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/api/')
         run: |
           echo ">>> API files changed. Building and deploying API service..."
-          docker build -t localhost:5000/complex_api:${{ github.sha }} ./web_app/backend/services/api
+          docker build --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/complex_api:${{ github.sha }} ./web_app/backend/services/api
           docker push localhost:5000/complex_api:${{ github.sha }}
           export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
           kubectl set image deployment/service-api complex-api-service=localhost:5000/complex_api:${{ github.sha }}

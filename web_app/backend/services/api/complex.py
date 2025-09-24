@@ -52,6 +52,7 @@ app.register_blueprint(charts_bp, url_prefix='/charts')
 # csrf.exempt(gpio_bp)
 # csrf.exempt(charts_bp)
 
+APP_VERSION = os.getenv('APP_VERSION', 'unknown')
 
 # Handle CSRF errors gracefully
 @app.errorhandler(CSRFError)
@@ -268,6 +269,10 @@ def init():
     glb.PIN_IN_CABINET_OPEN_DOOR_BUTTON = db.get_pin_by_code('PIN_IN_CABINET_OPEN_DOOR_BUTTON')
     glb.PIN_IN_WIFI_BUTTON = db.get_pin_by_code('PIN_IN_WIFI_BUTTON')
 
+
+@app.route('/version')
+def get_version():
+    return {"version": APP_VERSION}
 
 
 if __name__ == '__main__':
