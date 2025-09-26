@@ -202,4 +202,11 @@ docker run --rm -it --entrypoint /bin/bash localhost:5000/lamp_mode:latest
 
 
 docker login -u corlovtb
-dckr_pat_HPvXDzDkWHMccmkaKqLLQnPvxJA
+
+
+
+ 2143  git status
+ 2144  git add *
+ 2145  git status
+ 2146  git commit -m "test 26 sept v.1.0"
+ 2147  git push origin main
