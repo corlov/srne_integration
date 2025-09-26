@@ -189,3 +189,17 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main
 Если нужно запустить по-быстрому какой-то докер образ чтобы пглядеть в нем что лежит и как работает и т.д.
 
 docker run --rm -it --entrypoint /bin/bash localhost:5000/lamp_mode:latest
+
+
+
+
+
+
+
+
+
+
+
+
+docker login -u corlovtb
+dckr_pat_HPvXDzDkWHMccmkaKqLLQnPvxJA
