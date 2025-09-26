@@ -1,6 +1,6 @@
 # FROM python:3.10-slim
 
-# ARG APP_VERSION
+# ARG APP_VERSION   
 # ENV APP_VERSION=${APP_VERSION}
 
 # WORKDIR /app
