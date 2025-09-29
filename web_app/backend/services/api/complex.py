@@ -272,7 +272,11 @@ def init():
 
 @app.route('/version', methods=['GET'])
 def get_version():
-    return jsonify({"version_app33": APP_VERSION, "time": time.time()}), 200
+    return jsonify({
+        "version_app33": APP_VERSION, 
+        "time": time.time(),
+        "marker": '1'
+    }), 200
 
 
 if __name__ == '__main__':
