@@ -101,7 +101,8 @@ jobs:
 
               # --- ШАГ Г: ПРИМЕНЯЕМ ГОТОВЫЙ МАНИФЕСТ ---
               echo ">>> Applying manifest to the cluster..."
-              kubectl apply -f ./web_app/backend/services/api/deployment.yaml
+              #kubectl apply -f ./web_app/backend/services/api/deployment.yaml
+              kubectl apply -f ./web_app/backend/services/api/
 
           # - name: Build and Deploy API
           #   if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/api/')
