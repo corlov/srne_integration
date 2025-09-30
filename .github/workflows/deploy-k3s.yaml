@@ -56,6 +56,28 @@ jobs:
           #     # --- ОСТАВЛЯЕМ 'SET IMAGE' ДЛЯ ГАРАНТИРОВАННОГО ОБНОВЛЕНИЯ ---
           #     kubectl set image deployment/service-api complex-api-service=${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }}
           
+          # - name: Build and Deploy API
+          #   if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/api/')
+          #   run: |
+          #     echo ">>> Building and deploying API service..."
+          #     docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }} ./web_app/backend/services/api
+          #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }}
+
+          #     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+          #     # --- ШАГ А: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ---
+          #     # Используем двойные кавычки для надежности
+          #     sed -i "s|__IMAGE_TAG__|${{ github.sha }}|g" ./web_app/backend/services/api/deployment.yaml
+
+          #     # --- ШАГ Б (ОЧЕНЬ ВАЖНЫЙ): ПРОВЕРЯЕМ РЕЗУЛЬТАТ ЗАМЕНЫ ---
+          #     echo ">>> Displaying final deployment.yaml before apply:"
+          #     echo "----------------------------------------------------"
+          #     cat ./web_app/backend/services/api/deployment.yaml
+          #     echo "----------------------------------------------------"
+
+          #     # --- ШАГ В: ПРИМЕНЯЕМ ГОТОВЫЙ МАНИФЕСТ ---
+          #     kubectl apply -f ./web_app/backend/services/api/deployment.yaml
+
           - name: Build and Deploy API
             if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/api/')
             run: |
@@ -65,17 +87,20 @@ jobs:
 
               export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
-              # --- ШАГ А: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ---
-              # Используем двойные кавычки для надежности
+              # --- ШАГ А: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ИМЕНИ ПОЛЬЗОВАТЕЛЯ ---
+              sed -i "s|__DOCKERHUB_USERNAME__|${{ secrets.DOCKERHUB_USERNAME }}|g" ./web_app/backend/services/api/deployment.yaml
+
+              # --- ШАГ Б: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ТЕГА ---
               sed -i "s|__IMAGE_TAG__|${{ github.sha }}|g" ./web_app/backend/services/api/deployment.yaml
 
-              # --- ШАГ Б (ОЧЕНЬ ВАЖНЫЙ): ПРОВЕРЯЕМ РЕЗУЛЬТАТ ЗАМЕНЫ ---
+              # --- ШАГ В: ПРОВЕРЯЕМ РЕЗУЛЬТАТ ---
               echo ">>> Displaying final deployment.yaml before apply:"
               echo "----------------------------------------------------"
               cat ./web_app/backend/services/api/deployment.yaml
               echo "----------------------------------------------------"
 
-              # --- ШАГ В: ПРИМЕНЯЕМ ГОТОВЫЙ МАНИФЕСТ ---
+              # --- ШАГ Г: ПРИМЕНЯЕМ ГОТОВЫЙ МАНИФЕСТ ---
+              echo ">>> Applying manifest to the cluster..."
               kubectl apply -f ./web_app/backend/services/api/deployment.yaml
 
           # - name: Build and Deploy API
