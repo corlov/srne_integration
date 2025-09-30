@@ -71,18 +71,22 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 3     # Убрать под из сервиса после 3 провалов
      
-          # FIXME: убрать при ПРОДе НАЧАЛО
-          volumeMounts:
-            - name: source-code
-              mountPath: /app
-          # FIXME: убрать при ПРОДе КОНЕЦ
+          # # FIXME: убрать при ПРОДе НАЧАЛО
+          # volumeMounts:
+          #   - name: source-code
+          #     mountPath: /app
+          # # FIXME: убрать при ПРОДе КОНЕЦ
+
           ports:
             - containerPort: 5011
               protocol: TCP
-      # FIXME: убрать при ПРОДе НАЧАЛО
-      volumes:
-        - name: source-code
-          hostPath:
-            path: /root/solar/services/api
-      # FIXME: убрать при ПРОДе КОНЕЦ
+
+      # # FIXME: убрать при ПРОДе НАЧАЛО
+      # volumes:
+      #   - name: source-code
+      #     hostPath:
+      #       path: /root/solar/services/api
+      # # FIXME: убрать при ПРОДе КОНЕЦ
+
+
       restartPolicy: Always
