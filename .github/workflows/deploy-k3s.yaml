@@ -65,10 +65,32 @@ jobs:
 
               export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
-              # --- ШАГ А: ВСТАВЛЯЕМ ПРАВИЛЬНЫЙ ТЕГ В YAML-ФАЙЛ ---
-              # Эта команда заменяет плейсхолдер __IMAGE_TAG__ на реальный хэш коммита
-              sed -i 's|__IMAGE_TAG__|${{ github.sha }}|g' ./web_app/backend/services/api/deployment.yaml
+              # --- ШАГ А: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ---
+              # Используем двойные кавычки для надежности
+              sed -i "s|__IMAGE_TAG__|${{ github.sha }}|g" ./web_app/backend/services/api/deployment.yaml
 
-              # --- ШАГ Б: ПРИМЕНЯЕМ ГОТОВЫЙ МАНИФЕСТ ---
-              # Эта команда создаст или обновит ВСЕ объекты из файла (Deployment, Service, Ingress)
+              # --- ШАГ Б (ОЧЕНЬ ВАЖНЫЙ): ПРОВЕРЯЕМ РЕЗУЛЬТАТ ЗАМЕНЫ ---
+              echo ">>> Displaying final deployment.yaml before apply:"
+              echo "----------------------------------------------------"
+              cat ./web_app/backend/services/api/deployment.yaml
+              echo "----------------------------------------------------"
+
+              # --- ШАГ В: ПРИМЕНЯЕМ ГОТОВЫЙ МАНИФЕСТ ---
               kubectl apply -f ./web_app/backend/services/api/deployment.yaml
+
+          # - name: Build and Deploy API
+          #   if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/api/')
+          #   run: |
+          #     echo ">>> Building and deploying API service..."
+          #     docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }} ./web_app/backend/services/api
+          #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }}
+
+          #     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+          #     # --- ШАГ А: ВСТАВЛЯЕМ ПРАВИЛЬНЫЙ ТЕГ В YAML-ФАЙЛ ---
+          #     # Эта команда заменяет плейсхолдер __IMAGE_TAG__ на реальный хэш коммита
+          #     sed -i 's|__IMAGE_TAG__|${{ github.sha }}|g' ./web_app/backend/services/api/deployment.yaml
+
+          #     # --- ШАГ Б: ПРИМЕНЯЕМ ГОТОВЫЙ МАНИФЕСТ ---
+          #     # Эта команда создаст или обновит ВСЕ объекты из файла (Deployment, Service, Ingress)
+          #     kubectl apply -f ./web_app/backend/services/api/deployment.yaml
