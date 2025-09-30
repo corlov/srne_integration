@@ -10,6 +10,40 @@ jobs:
     runs-on: self-hosted
 
     steps:
+
+      # --- ШАГ 1: ЧИСТЫЙ CHECKOUT И ПРОВЕРКА ---
+      - name: Clean Checkout and Verify Files
+        uses: actions/checkout@v3
+        with:
+          # Эта опция удалит все старые файлы перед скачиванием.
+          # Это наш главный ход против "застрявшего" кеша Runner'а.
+          clean: true
+
+      - name: DEBUG - Verify Workspace Content
+        run: |
+          echo ">>> Verifying content of workspace after clean checkout:"
+          echo ">>> Listing files in test_service directory:"
+          ls -la ./web_app/backend/services/test_service/
+          echo ">>> Displaying content of test_app.py:"
+          echo "----------------------------------------------------"
+          cat ./web_app/backend/services/test_service/test_app.py
+          echo "----------------------------------------------------"
+
+      # --- ШАГ 2: ОПРЕДЕЛЯЕМ ИЗМЕНЕНИЯ (теперь он должен сработать) ---
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+
+      # --- ШАГ 3: ЛОГИНИМСЯ В DOCKER HUB ---
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+
+
+
       - name: Build and Deploy TEST Service
         # Запускаем, если изменились файлы в папке test_service/
         if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/test_service/')
