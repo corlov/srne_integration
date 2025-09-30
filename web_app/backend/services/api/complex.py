@@ -275,7 +275,7 @@ def get_version():
     return jsonify({
         "version_app33": APP_VERSION, 
         "time": time.time(),
-        "marker": '12'
+        "marker": '13'
     }), 200
 
 
