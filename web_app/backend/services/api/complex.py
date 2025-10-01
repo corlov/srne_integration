@@ -270,27 +270,19 @@ def init():
     glb.PIN_IN_WIFI_BUTTON = db.get_pin_by_code('PIN_IN_WIFI_BUTTON')
 
 
+
 @app.route('/version', methods=['GET'])
 def get_version():
     return jsonify({
-        "version_app33": APP_VERSION, 
-        "time": time.time(),
-        "marker": '15'
+        "version": APP_VERSION, 
+        "time": time.time()
     }), 200
+
 
 
 if __name__ == '__main__':
     init()
     # app.run(host='0.0.0.0', port=5011)
-    # debug=True включает и отладчик, и reloader
-    
-    print("!!!!!!!!!!!!!! NEW VERSION 3334 DEPLOYED VIA GITHUB ACTIONS !!!!!!!!!!!!!!")
+
+    # FIXME: debug=True включает и отладчик, и reloader - отключить на проде
     app.run(host='0.0.0.0', port=5011, debug=True)
-
-    # app.run(
-    #     host='0.0.0.0',
-    #     port=5011,
-    #     debug=True,
-    #     ssl_context=('cert.pem', 'key.pem') # <-- Добавляем SSL-контекст
-    # )
-

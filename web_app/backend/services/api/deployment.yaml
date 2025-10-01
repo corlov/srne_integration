@@ -47,31 +47,34 @@ spec:
             - name: SSE_UPDATE_GPIO_TIMEOUT
               value: "5"
           command: ["python3", "complex.py"]
-          #image: localhost:5000/complex_api:latest
-          #image: corlovtb/complex_api # Замени на свой логин
-          #image: ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:__IMAGE_TAG__
+
+          # репозиторий = локальный
+          # image: localhost:5000/complex_api:latest
+
+          # репозиторий = DockerHub 
           image: __DOCKERHUB_USERNAME__/complex_api:__IMAGE_TAG__
+
           imagePullPolicy: Always
           name: complex-api-service
           livenessProbe:
             httpGet:
-              path: /healthz      # Наш новый эндпоинт
-              port: 5011          # Порт, на котором работает приложение
-            initialDelaySeconds: 30 # Даем поду 15 секунд на запуск перед первой проверкой
-            periodSeconds: 60       # Проверять каждые 20 секунд
-            timeoutSeconds: 5       # Считать проверку проваленной, если нет ответа за 5 секунд
-            failureThreshold: 3     # Перезапустить под после 3 провалов подряд
+              path: /healthz      
+              port: 5011          
+            initialDelaySeconds: 30 # Даем поду Х секунд на запуск перед первой проверкой
+            periodSeconds: 60       # Проверять каждые Х секунд
+            timeoutSeconds: 5       # Считать проверку проваленной, если нет ответа за Х секунд
+            failureThreshold: 3     # Перезапустить под после Х провалов подряд
 
           readinessProbe:
             httpGet:
-              path: /healthz      # Можно использовать тот же эндпоинт
+              path: /healthz      
               port: 5011
-            initialDelaySeconds: 50  # Начинаем проверять готовность раньше
-            periodSeconds: 30       # Проверяем готовность чаще
+            initialDelaySeconds: 50  
+            periodSeconds: 30       
             timeoutSeconds: 10
-            failureThreshold: 3     # Убрать под из сервиса после 3 провалов
+            failureThreshold: 3     
      
-          # # FIXME: убрать при ПРОДе НАЧАЛО
+          # # FIXME: убрать при ПРОДе НАЧАЛО Удобно при отладке (hotload)
           # volumeMounts:
           #   - name: source-code
           #     mountPath: /app
@@ -81,7 +84,7 @@ spec:
             - containerPort: 5011
               protocol: TCP
 
-      # # FIXME: убрать при ПРОДе НАЧАЛО
+      # # FIXME: убрать при ПРОДе НАЧАЛО Удобно при отладке (hotload)
       # volumes:
       #   - name: source-code
       #     hostPath:
