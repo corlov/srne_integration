@@ -72,16 +72,41 @@ jobs:
           
 
 
-          # --- Сервис: GPIO ---
+          # # --- Сервис: GPIO ---
+          # - name: Build and Deploy GPIO
+          #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/gpio/')
+          #   run: |
+          #     echo ">>> Building and deploying GPIO service..."
+          #     docker build -t localhost:5000/gpio:${{ github.sha }} ./web_app/backend/services/gpio
+          #     docker push localhost:5000/gpio:${{ github.sha }}
+          #     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+          #     # kubectl set image deployment/service-gpio service-gpio=localhost:5000/gpio:${{ github.sha }}
+          #     kubectl apply -f ./web_app/backend/services/gpio/
+
+          # ==================================================================
+          # ===                     СЕРВИС GPIO                            ===
+          # ==================================================================
+          # docker run -d -p 5000:5000 --restart=always --name registry registry:2
           - name: Build and Deploy GPIO
-            if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/gpio/')
+            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/gpio/')
             run: |
               echo ">>> Building and deploying GPIO service..."
-              docker build -t localhost:5000/gpio:${{ github.sha }} ./web_app/backend/services/gpio
-              docker push localhost:5000/gpio:${{ github.sha }}
+              # --- ИЗМЕНЕНИЕ: Собираем и тегируем для локального репозитория ---
+              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/service-gpio:${{ github.sha }} ./web_app/backend/services/gpio
+              # --- ИЗМЕНЕНИЕ: Пушим в локальный репозиторий ---
+              docker push localhost:5000/service-gpio:${{ github.sha }}
+
               export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-              # kubectl set image deployment/service-gpio service-gpio=localhost:5000/gpio:${{ github.sha }}
+
+              # --- Готовим deployment.yaml для GPIO ---
+              echo ">>> Preparing GPIO deployment manifest..."
+              # --- ИЗМЕНЕНИЕ: Вставляем полный локальный путь к образу ---
+              sed -i "s|__IMAGE_NAME_AND_TAG__|localhost:5000/service-gpio:${{ github.sha }}|g" ./web_app/backend/services/gpio/deployment.yaml
+
+              # --- Применяем ВСЕ манифесты из папки GPIO ---
+              echo ">>> Applying all manifests from the GPIO directory..."
               kubectl apply -f ./web_app/backend/services/gpio/
+
           
           # # --- Сервис: SRNE Adaptor ---
       # - name: Build and Deploy SRNE Adaptor
