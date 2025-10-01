@@ -52,7 +52,8 @@ spec:
               value: 192.168.1.83
             - name: REDIS_PORT
               value: "6379"
-          image: localhost:5000/srne_adaptor:latest
+          #image: localhost:5000/srne_adaptor:latest
+          image: __IMAGE_NAME_AND_TAG__
           securityContext:
             privileged: true
           volumeMounts:

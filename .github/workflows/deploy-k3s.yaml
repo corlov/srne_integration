@@ -44,44 +44,33 @@ jobs:
           # ==================================================================
           # ===                     БОЕВОЙ API                             ===
           # ==================================================================
-          # - name: Build and Deploy API
-          #   if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/api/')
-          #   run: |
-          #     echo ">>> Building and deploying API service..."
-          #     docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }} ./web_app/backend/services/api
-          #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }}
+          - name: Build and Deploy API
+            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/api/')
+            run: |
+              echo ">>> Building and deploying API service..."
+              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }} ./web_app/backend/services/api
+              docker push ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }}
 
-          #     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
-          #     # --- ШАГ А: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ИМЕНИ ПОЛЬЗОВАТЕЛЯ ---
-          #     sed -i "s|__DOCKERHUB_USERNAME__|${{ secrets.DOCKERHUB_USERNAME }}|g" ./web_app/backend/services/api/deployment.yaml
+              # --- ШАГ А: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ИМЕНИ ПОЛЬЗОВАТЕЛЯ ---
+              sed -i "s|__DOCKERHUB_USERNAME__|${{ secrets.DOCKERHUB_USERNAME }}|g" ./web_app/backend/services/api/deployment.yaml
 
-          #     # --- ШАГ Б: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ТЕГА ---
-          #     sed -i "s|__IMAGE_TAG__|${{ github.sha }}|g" ./web_app/backend/services/api/deployment.yaml
+              # --- ШАГ Б: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ТЕГА ---
+              sed -i "s|__IMAGE_TAG__|${{ github.sha }}|g" ./web_app/backend/services/api/deployment.yaml
 
-          #     # --- ШАГ В: ПРОВЕРЯЕМ РЕЗУЛЬТАТ ---
-          #     echo ">>> Displaying final deployment.yaml before apply:"
-          #     echo "----------------------------------------------------"
-          #     cat ./web_app/backend/services/api/deployment.yaml
-          #     echo "----------------------------------------------------"
+              # --- ШАГ В: ПРОВЕРЯЕМ РЕЗУЛЬТАТ ---
+              echo ">>> Displaying final deployment.yaml before apply:"
+              echo "----------------------------------------------------"
+              cat ./web_app/backend/services/api/deployment.yaml
+              echo "----------------------------------------------------"
 
-          #     # --- ШАГ Г: ПРИМЕНЯЕМ ГОТОВЫЙ МАНИФЕСТ ---
-          #     echo ">>> Applying manifest to the cluster..."
-          #     #kubectl apply -f ./web_app/backend/services/api/deployment.yaml
-          #     kubectl apply -f ./web_app/backend/services/api/
+              # --- ШАГ Г: ПРИМЕНЯЕМ ГОТОВЫЙ МАНИФЕСТ ---
+              echo ">>> Applying manifest to the cluster..."
+              #kubectl apply -f ./web_app/backend/services/api/deployment.yaml
+              kubectl apply -f ./web_app/backend/services/api/
           
 
-
-          # # --- Сервис: GPIO ---
-          # - name: Build and Deploy GPIO
-          #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/gpio/')
-          #   run: |
-          #     echo ">>> Building and deploying GPIO service..."
-          #     docker build -t localhost:5000/gpio:${{ github.sha }} ./web_app/backend/services/gpio
-          #     docker push localhost:5000/gpio:${{ github.sha }}
-          #     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-          #     # kubectl set image deployment/service-gpio service-gpio=localhost:5000/gpio:${{ github.sha }}
-          #     kubectl apply -f ./web_app/backend/services/gpio/
 
           # ==================================================================
           # ===                     СЕРВИС GPIO                            ===
@@ -108,66 +97,86 @@ jobs:
               kubectl apply -f ./web_app/backend/services/gpio/
 
           
-          # # --- Сервис: SRNE Adaptor ---
-      # - name: Build and Deploy SRNE Adaptor
-      #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/srne_adaptor/')
-      #   run: |
-      #     echo ">>> Building and deploying SRNE Adaptor service..."
-      #     docker build -t localhost:5000/srne_adaptor:${{ github.sha }} ./web_app/backend/services/srne_adaptor
-      #     docker push localhost:5000/srne_adaptor:${{ github.sha }}
-      #     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-      #     # ВАЖНО: Проверь, что имя деплоймента именно 'service-srne-adaptor'
-      #     kubectl set image deployment/service-srne-adaptor service-srne-adaptor=localhost:5000/srne_adaptor:${{ github.sha }}
+          
+          # ==================================================================
+          # ===                     СЕРВИС SRNE                            ===
+          # ==================================================================
+          - name: Build and Deploy SRNE
+            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/srne_adaptor/')
+            run: |
+              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/service-srne-adaptor:${{ github.sha }} ./web_app/backend/services/srne_adaptor
+              docker push localhost:5000/service-srne-adaptor:${{ github.sha }}
+              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+              sed -i "s|__IMAGE_NAME_AND_TAG__|localhost:5000/service-srne-adaptor:${{ github.sha }}|g" ./web_app/backend/services/srne_adaptor/deployment.yaml
+              kubectl apply -f ./web_app/backend/services/srne_adaptor/
 
-      # # --- Сервис: GPIO ---
-      # - name: Build and Deploy GPIO
-      #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/gpio/')
-      #   run: |
-      #     echo ">>> Building and deploying GPIO service..."
-      #     docker build -t localhost:5000/gpio:${{ github.sha }} ./web_app/backend/services/gpio
-      #     docker push localhost:5000/gpio:${{ github.sha }}
-      #     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-      #     kubectl set image deployment/service-gpio service-gpio=localhost:5000/gpio:${{ github.sha }}
-
-      # # --- Добавь сюда другие k8s-сервисы (lamp_mode, trafficlight_mode) по аналогии ---
-
-
-      # # ==================================================================
-      # # ===                   ФРОНТЕНД (KUBERNETES)                    ===
-      # # ==================================================================
-      # - name: Build and Deploy Frontend
-      #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/frontend/')
-      #   run: |
-      #     echo ">>> Building and deploying Frontend..."
-      #     docker build -t localhost:5000/frontend:${{ github.sha }} ./web_app/frontend
-      #     docker push localhost:5000/frontend:${{ github.sha }}
-      #     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-      #     # ВАЖНО: Проверь имя деплоймента для фронтенда
-      #     kubectl set image deployment/frontend-deployment frontend=localhost:5000/frontend:${{ github.sha }}
+          
+          # ==================================================================
+          # ===                     СЕРВИС lamp_mode                       ===
+          # ==================================================================
+          - name: Build and Deploy lamp-mode
+            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/lamp_mode/')
+            run: |
+              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/service-lamp-mode:${{ github.sha }} ./web_app/backend/services/lamp_mode
+              docker push localhost:5000/service-lamp-mode:${{ github.sha }}
+              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+              sed -i "s|__IMAGE_NAME_AND_TAG__|localhost:5000/service-lamp-mode:${{ github.sha }}|g" ./web_app/backend/services/lamp_mode/deployment.yaml
+              kubectl apply -f ./web_app/backend/services/lamp_mode/
 
 
-      # # ==================================================================
-      # # ===                   СЕРВИСЫ SYSTEMD                        ===
-      # # ==================================================================
+          # ==================================================================
+          # ===                     СЕРВИС trafficlight_mode               ===
+          # ==================================================================
+          - name: Build and Deploy trafficlight-mode
+            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/trafficlight_mode/')
+            run: |
+              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/service-trafficlight-mode:${{ github.sha }} ./web_app/backend/services/trafficlight_mode
+              docker push localhost:5000/service-trafficlight-mode:${{ github.sha }}
+              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+              sed -i "s|__IMAGE_NAME_AND_TAG__|localhost:5000/service-trafficlight-mode:${{ github.sha }}|g" ./web_app/backend/services/trafficlight_mode/deployment.yaml
+              kubectl apply -f ./web_app/backend/services/trafficlight_mode/
 
-      # # --- Сервис: init_gpio_numbers ---
-      # - name: Deploy Init GPIO Script
-      #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/init/')
-      #   run: |
-      #     echo ">>> Deploying Init GPIO script..."
-      #     # Копируем обновленный скрипт в его рабочую директорию
-      #     sudo cp ./web_app/backend/services/init/update_gpio_numbers.py /opt/solar_scripts/update_gpio_numbers.py
-      #     # Перезапускаем сервис
-      #     sudo systemctl restart init_gpio_numbers.service
 
-      # # --- Сервис: time_source ---
-      # - name: Deploy Time Source Script
-      #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/time_source/')
-      #   run: |
-      #     echo ">>> Deploying Time Source script..."
-      #     sudo cp ./web_app/backend/services/time_source/time_source.py /opt/solar_scripts/time_source.py
-      #     sudo systemctl restart time_source.service
 
-      # # --- Добавь сюда wifi_hotspot_service по аналогии ---
+
+
+
+          # # ==================================================================
+          # # ===                   ФРОНТЕНД (KUBERNETES)                    ===
+          # # ==================================================================
+          # - name: Build and Deploy Frontend
+          #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/frontend/')
+          #   run: |
+          #     echo ">>> Building and deploying Frontend..."
+          #     docker build -t localhost:5000/frontend:${{ github.sha }} ./web_app/frontend
+          #     docker push localhost:5000/frontend:${{ github.sha }}
+          #     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+          #     # ВАЖНО: Проверь имя деплоймента для фронтенда
+          #     kubectl set image deployment/frontend-deployment frontend=localhost:5000/frontend:${{ github.sha }}
+
+
+          # # ==================================================================
+          # # ===                   СЕРВИСЫ SYSTEMD                        ===
+          # # ==================================================================
+
+          # # --- Сервис: init_gpio_numbers ---
+          # - name: Deploy Init GPIO Script
+          #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/init/')
+          #   run: |
+          #     echo ">>> Deploying Init GPIO script..."
+          #     # Копируем обновленный скрипт в его рабочую директорию
+          #     sudo cp ./web_app/backend/services/init/update_gpio_numbers.py /opt/solar_scripts/update_gpio_numbers.py
+          #     # Перезапускаем сервис
+          #     sudo systemctl restart init_gpio_numbers.service
+
+          # # --- Сервис: time_source ---
+          # - name: Deploy Time Source Script
+          #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/time_source/')
+          #   run: |
+          #     echo ">>> Deploying Time Source script..."
+          #     sudo cp ./web_app/backend/services/time_source/time_source.py /opt/solar_scripts/time_source.py
+          #     sudo systemctl restart time_source.service
+
+          # # --- Добавь сюда wifi_hotspot_service по аналогии ---
 
          
