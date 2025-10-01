@@ -9,6 +9,8 @@ WORKDIR /app
 # Этот шаг кэшируется, если файлы не менялись, что ускоряет сборку
 COPY package.json yarn.lock ./
 
+RUN apk add --no-cache python3 make g++
+
 # Устанавливаем зависимости
 RUN yarn install --frozen-lockfile --network-timeout 100000
 

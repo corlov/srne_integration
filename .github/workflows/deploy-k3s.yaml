@@ -158,7 +158,7 @@ jobs:
           # # ==================================================================
 
           # --- Сервис: init_gpio_numbers ---
-          - name: Deploy Init GPIO Script (systemd-сервис)
+          - name: Deploy Init GPIO Script (systemd)
             if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/init/')
             run: |
               echo <q>">>> Deploying Init GPIO script..."</q>
