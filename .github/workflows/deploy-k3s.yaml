@@ -139,44 +139,108 @@ jobs:
 
 
 
+          # ==================================================================
+          # ===                   ФРОНТЕНД                                 ===
+          # ==================================================================
+          - name: Build and Deploy Frontend
+            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/frontend/')
+            run: |
+              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/solar-front:${{ github.sha }} ./web_app/frontend
+              docker push localhost:5000/solar-front:${{ github.sha }}
+              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+              sed -i "s|__IMAGE_NAME_AND_TAG__|localhost:5000/solar-front:${{ github.sha }}|g" ./web_app/k3s-frontend/frontend-deployment.yaml
+              kubectl apply -f ./web_app/k3s-frontend/
 
-
-          # # ==================================================================
-          # # ===                   ФРОНТЕНД (KUBERNETES)                    ===
-          # # ==================================================================
-          # - name: Build and Deploy Frontend
-          #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/frontend/')
-          #   run: |
-          #     echo ">>> Building and deploying Frontend..."
-          #     docker build -t localhost:5000/frontend:${{ github.sha }} ./web_app/frontend
-          #     docker push localhost:5000/frontend:${{ github.sha }}
-          #     export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-          #     # ВАЖНО: Проверь имя деплоймента для фронтенда
-          #     kubectl set image deployment/frontend-deployment frontend=localhost:5000/frontend:${{ github.sha }}
 
 
           # # ==================================================================
           # # ===                   СЕРВИСЫ SYSTEMD                        ===
           # # ==================================================================
 
-          # # --- Сервис: init_gpio_numbers ---
-          # - name: Deploy Init GPIO Script
-          #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/init/')
-          #   run: |
-          #     echo ">>> Deploying Init GPIO script..."
-          #     # Копируем обновленный скрипт в его рабочую директорию
-          #     sudo cp ./web_app/backend/services/init/update_gpio_numbers.py /opt/solar_scripts/update_gpio_numbers.py
-          #     # Перезапускаем сервис
-          #     sudo systemctl restart init_gpio_numbers.service
+          # --- Сервис: init_gpio_numbers ---
+          - name: Deploy Init GPIO Script (systemd-сервис)
+            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/init/')
+            run: |
+              echo <q>">>> Deploying Init GPIO script..."</q>
+              sudo mkdir -p /opt/solar_scripts
+              sudo mkdir -p /opt/solar_scripts/init
+              sudo cp ./web_app/backend/services/init/*.py /opt/solar_scripts/init/
 
-          # # --- Сервис: time_source ---
-          # - name: Deploy Time Source Script
-          #   if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/time_source/')
-          #   run: |
-          #     echo ">>> Deploying Time Source script..."
-          #     sudo cp ./web_app/backend/services/time_source/time_source.py /opt/solar_scripts/time_source.py
-          #     sudo systemctl restart time_source.service
+              echo "
+                [Unit]
+                Description=Init GPIO Numbers Script
+                After=network.target
 
-          # # --- Добавь сюда wifi_hotspot_service по аналогии ---
+                [Service]
+                Type=oneshot
+                ExecStart=/usr/bin/python3 /opt/solar_scripts/init/update_gpio_numbers.py
+                RemainAfterExit=yes
 
-         
+                [Install]
+                WantedBy=multi-user.target
+              " | sudo tee /etc/systemd/system/init_gpio_numbers.service
+
+              sudo systemctl daemon-reload
+              sudo systemctl enable init_gpio_numbers.service
+              sudo systemctl start init_gpio_numbers.service
+
+          # --- Сервис: time_source ---
+          - name: Deploy Time Source Script (systemd)
+            if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/time_source/')
+            run: |
+              echo <q>">>> Deploying Time Source script..."</q>
+              sudo mkdir -p /opt/solar_scripts
+              sudo mkdir -p /opt/solar_scripts/time_source
+              sudo cp ./web_app/backend/services/time_source/*.py /opt/solar_scripts/time_source/
+                           
+              echo "
+                [Unit]
+                Description=Time source service
+                After=network.target
+
+                [Service]
+                ExecStart=/usr/bin/python3 /opt/solar_scripts/time_source/time_source.py
+                WorkingDirectory=/opt/solar_scripts/time_source
+                StandardOutput=journal
+                StandardError=journal
+                Restart=always
+                User=root
+
+                [Install]
+                WantedBy=multi-user.target
+              " | sudo tee /etc/systemd/system/time_source.service
+
+              sudo systemctl daemon-reload
+              sudo systemctl enable time_source.service
+              sudo systemctl restart time_source.service
+          
+          # --- Сервис: wifi_hotspot ---
+          - name: Deploy WiFi (systemd)
+            if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/wifi_hotspot_service/')
+            run: |
+              echo <q>">>> Deploying Time Source script..."</q>
+              sudo mkdir -p /opt/solar_scripts
+              sudo mkdir -p /opt/solar_scripts/wifi_hotspot_service
+              sudo cp ./web_app/backend/services/wifi_hotspot_service/*.py /opt/solar_scripts/wifi_hotspot_service/
+                           
+              echo "
+                [Unit]
+                Description=Wifi
+                After=network.target
+
+                [Service]
+                ExecStart=/usr/bin/python3 /opt/solar_scripts/wifi_hotspot_service/wifi_hotspot.py
+                WorkingDirectory=/opt/solar_scripts/wifi_hotspot_service
+                StandardOutput=journal
+                StandardError=journal
+                Restart=always
+                User=root
+
+                [Install]
+                WantedBy=multi-user.target
+              " | sudo tee /etc/systemd/system/wifi_hotspot.service
+
+              sudo systemctl daemon-reload
+              sudo systemctl enable wifi_hotspot.service
+              sudo systemctl restart wifi_hotspot.service
+

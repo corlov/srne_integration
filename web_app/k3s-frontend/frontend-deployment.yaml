@@ -14,8 +14,10 @@ spec:
     spec:
       containers:
       - name: frontend-container
-        # Указываем образ, который мы только что загрузили
-        image: localhost:5000/solar-front:v1.1
+        # image: localhost:5000/solar-front:v1.1
+
+        image: __IMAGE_NAME_AND_TAG__
+
         imagePullPolicy: Always # Всегда проверять наличие новой версии
         ports:
         - containerPort: 80 # Порт, который слушает Nginx внутри контейнера
