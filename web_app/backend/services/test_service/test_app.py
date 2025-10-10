@@ -5,7 +5,7 @@ import json
 import os
 
 PORT = 8001
-VERSION = os.getenv('APP_VERSION', 'unknown_version')
+VERSION = os.getenv('APP_VERSION', '1.0.1')
 
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
