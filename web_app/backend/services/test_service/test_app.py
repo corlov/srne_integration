@@ -16,7 +16,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             response = {
                 "message": "This is the TEST service!",
                 "version": VERSION,
-                "status": "OK `10"
+                "status": "OK `11"
             }
             self.wfile.write(json.dumps(response).encode())
         else:
