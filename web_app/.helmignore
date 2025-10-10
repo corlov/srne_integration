@@ -1,0 +1,11 @@
+# solar-system-chart/.helmignore
+.git/
+.idea/
+
+
+# Log files
+*.log
+
+
+# Node.js dependencies
+frontend/node_modules/

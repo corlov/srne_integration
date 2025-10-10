@@ -1,0 +1,69 @@
+# solar-system-chart/templates/trafficlight-mode-deployment.yaml
+
+{{- if .Values.trafficlightMode.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-trafficlight-mode
+  labels:
+    {{- include "solar-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: trafficlight-mode
+spec:
+  replicas: {{ .Values.trafficlightMode.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "solar-system.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: trafficlight-mode
+  template:
+    metadata:
+      labels:
+        {{- include "solar-system.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: trafficlight-mode
+    spec:
+      containers:
+        - name: trafficlight-mode-service
+          #image: "{{ .Values.global.dockerhubUsername }}/{{ .Values.trafficlightMode.image.repository }}:{{ .Values.trafficlightMode.image.tag }}"
+          image: "{{ .Values.trafficlightMode.image.repository }}:{{ .Values.trafficlightMode.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            # --- Общие настройки из global ---
+            - name: DB_HOST
+              value: {{ .Values.global.database.host | quote }}
+            - name: DB_NAME
+              value: {{ .Values.global.database.name | quote }}
+            - name: DB_PASSWORD
+              value: {{ .Values.global.database.password | quote }}
+            - name: DB_PORT
+              value: {{ .Values.global.database.port | quote }}
+            - name: DB_USER
+              value: {{ .Values.global.database.user | quote }}
+            - name: REDIS_HOST
+              value: {{ .Values.global.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.global.redis.port | quote }}
+            # --- Специфичные для этого сервиса переменные ---
+            {{- with .Values.trafficlightMode.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+
+          livenessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
+      restartPolicy: Always
+{{- end }}

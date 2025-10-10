@@ -1,0 +1,21 @@
+# solar-system-chart/templates/api-service.yaml
+
+{{- if .Values.api.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-api-service
+  labels:
+    {{- include "solar-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  type: ClusterIP
+  ports:
+    - name: "{{ .Values.api.service.port }}"
+      protocol: TCP
+      port: {{ .Values.api.service.port }}
+      targetPort: {{ .Values.api.service.port }}
+  selector:
+    {{- include "solar-system.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+{{- end }}

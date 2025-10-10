@@ -1,0 +1,73 @@
+# solar-system-chart/templates/test-service-all-in-one.yaml
+
+{{- if .Values.testService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-test-service
+  labels:
+    {{- include "solar-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: test-service
+spec:
+  replicas: {{ .Values.testService.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "solar-system.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: test-service
+  template:
+    metadata:
+      labels:
+        {{- include "solar-system.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: test-service
+    spec:
+      containers:
+      - name: test-service-container
+        image: "{{ .Values.global.dockerhubUsername }}/{{ .Values.testService.image.repository }}:{{ .Values.testService.image.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.testService.service.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-test-service
+  labels:
+    {{- include "solar-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: test-service
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "solar-system.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: test-service
+  ports:
+  - protocol: TCP
+    port: {{ .Values.testService.service.port }}
+    targetPort: {{ .Values.testService.service.port }}
+---
+{{- if .Values.testService.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-test-service-ingress
+  labels:
+    {{- include "solar-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: test-service
+spec:
+  ingressClassName: {{ .Values.global.ingress.className }}
+  tls:
+  - hosts:
+    - {{ .Values.testService.ingress.host | quote }}
+    secretName: {{ .Values.global.ingress.tlsSecretName }}
+  rules:
+  - host: {{ .Values.testService.ingress.host | quote }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}-test-service
+            port:
+              number: {{ .Values.testService.service.port }}
+{{- end }}
+{{- end }}

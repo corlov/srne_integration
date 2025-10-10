@@ -1,0 +1,71 @@
+# solar-system-chart/templates/api-deployment.yaml
+
+{{- if .Values.api.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-api
+  labels:
+    {{- include "solar-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "solar-system.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "solar-system.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+    spec:
+      containers:
+        - name: complex-api-service
+          image: "{{ .Values.global.dockerhubUsername }}/{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"          
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          command: ["python3", "complex.py"]
+          env:
+            # --- Общие настройки из global ---
+            - name: DB_HOST
+              value: {{ .Values.global.database.host | quote }}
+            - name: DB_NAME
+              value: {{ .Values.global.database.name | quote }}
+            - name: DB_PASSWORD
+              value: {{ .Values.global.database.password | quote }}
+            - name: DB_PORT
+              value: {{ .Values.global.database.port | quote }}
+            - name: DB_USER
+              value: {{ .Values.global.database.user | quote }}
+            - name: REDIS_HOST
+              value: {{ .Values.global.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.global.redis.port | quote }}
+            # --- Специфичные для API переменные ---
+            {{- with .Values.api.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+
+          ports:
+            - containerPort: {{ .Values.api.service.port }}
+              protocol: TCP
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.api.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.api.service.port }}
+            initialDelaySeconds: 50
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      restartPolicy: Always
+{{- end }}

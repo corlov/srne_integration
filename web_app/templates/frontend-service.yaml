@@ -1,0 +1,18 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-frontend-service
+  labels:
+    {{- include "solar-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "solar-system.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+  ports:
+  - protocol: TCP
+    port: {{ .Values.frontend.service.port }}
+    targetPort: {{ .Values.frontend.service.port }}
+{{- end }}

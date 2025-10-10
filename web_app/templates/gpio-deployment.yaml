@@ -1,0 +1,67 @@
+{{- if .Values.gpio.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-gpio
+  labels:
+    {{- include "solar-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gpio
+spec:
+  replicas: {{ .Values.gpio.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "solar-system.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gpio
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        {{- include "solar-system.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: gpio
+    spec:
+      containers:
+        - name: gpio-service
+          #image: "{{ .Values.global.dockerhubUsername }}/{{ .Values.gpio.image.repository }}:{{ .Values.gpio.image.tag }}"
+          image: "{{ .Values.gpio.image.repository }}:{{ .Values.gpio.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: DB_HOST
+              value: {{ .Values.global.database.host | quote }}
+            - name: DB_NAME
+              value: {{ .Values.global.database.name | quote }}
+            - name: DB_PASSWORD
+              value: {{ .Values.global.database.password | quote }}
+            - name: DB_PORT
+              value: {{ .Values.global.database.port | quote }}
+            - name: DB_USER
+              value: {{ .Values.global.database.user | quote }}
+            - name: REDIS_HOST
+              value: {{ .Values.global.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.global.redis.port | quote }}
+
+          livenessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+          securityContext:
+            privileged: {{ .Values.gpio.securityContext.privileged }}
+      restartPolicy: Always
+{{- end }}

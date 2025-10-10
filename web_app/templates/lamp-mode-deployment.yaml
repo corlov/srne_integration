@@ -1,0 +1,67 @@
+{{- if .Values.lampMode.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-lamp-mode
+  labels:
+    {{- include "solar-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: lamp-mode
+spec:
+  replicas: {{ .Values.lampMode.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "solar-system.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: lamp-mode
+  template:
+    metadata:
+      labels:
+        {{- include "solar-system.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: lamp-mode
+    spec:
+      containers:
+        - name: lamp-mode-service
+          image: "{{ .Values.lampMode.image.repository }}:{{ .Values.lampMode.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            # --- Общие настройки из global ---
+            - name: DB_HOST
+              value: {{ .Values.global.database.host | quote }}
+            - name: DB_NAME
+              value: {{ .Values.global.database.name | quote }}
+            - name: DB_PASSWORD
+              value: {{ .Values.global.database.password | quote }}
+            - name: DB_PORT
+              value: {{ .Values.global.database.port | quote }}
+            - name: DB_USER
+              value: {{ .Values.global.database.user | quote }}
+            - name: REDIS_HOST
+              value: {{ .Values.global.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.global.redis.port | quote }}
+            # --- Специфичные для этого сервиса переменные ---
+            {{- with .Values.lampMode.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+
+          livenessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+      restartPolicy: Always
+{{- end }}

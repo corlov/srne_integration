@@ -1,0 +1,135 @@
+# Глобальные настройки, общие для всех сервисов
+global:
+  dockerhubUsername: "corlovtb"
+  imagePullPolicy: Always
+
+  # Настройки подключения к базам данных
+  database:
+    host: "192.168.1.83"
+    port: "5432"
+    user: "postgres"
+    password: "gen_postgress_password" # FIXME <-- Лучше заменить на Helm secret
+    name: "solar_controller_telemetry"
+
+  redis:
+    host: "192.168.1.83"
+    port: "6379"
+
+  # Настройки Ingress
+  ingress:
+    className: "traefik"
+    tlsSecretName: "solar-tls-secret"
+
+
+
+# --- Настройки для каждого микросервиса ---
+
+testService:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "test-service"
+    tag: "c250a33bc925379fbde7d5350c8996c295790310"
+  service:
+    port: 8001
+  ingress:
+    enabled: true
+    host: "test.solar.local"
+
+api:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "complex_api"
+    tag: "daccc8cae343600781ff28cca095d66d0d0da4a7"
+    
+  service:
+    port: 5011
+  ingress:
+    enabled: true
+    host: "api.solar.local"
+  # Специфичные для API переменные окружения
+  extraEnv:
+    - name: SECRET_KEY
+      value: "uw3cok92adxmzpf35_secret_key_value_12082025"
+    - name: EXP_LIMIT
+      value: "600"
+    - name: SSE_UPDATE_COMPLEX_STATUS_TIMEOUT
+      value: "3"
+    - name: SSE_UPDATE_DYNAMIC_DATA_TIMEOUT
+      value: "10"
+    - name: SSE_UPDATE_GPIO_TIMEOUT
+      value: "5"
+
+
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "localhost:5000/solar-front"
+    tag: "016f5d1c9e24a603065e36f8fbdd74a75b039dac"
+  service:
+    port: 80
+  ingress:
+    enabled: true
+    host: "solar.local"
+
+
+gpio:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "localhost:5000/service-gpio"
+    tag: "05d6435966a0d5fd5445105520cda57c660dbf7c"
+  securityContext:
+    privileged: true
+
+lampMode:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "localhost:5000/service-lamp-mode"
+    tag: "8084d984123b18242271ace77c36ea7958d5017f"
+  extraEnv:
+    - name: DEVICE_ID
+      value: "2"
+
+srneAdaptor:
+  enabled: true
+  replicaCount: 1
+  image:
+    # repository: "srne_adaptor"
+    # tag: "latest"
+    repository: "localhost:5000/service-srne-adaptor"
+    tag: "8084d984123b18242271ace77c36ea7958d5017f"
+  securityContext:
+    privileged: true
+  # Путь к устройству на хосте (Raspberry Pi)
+  devicePath: /dev/ttyS0
+  extraEnv:
+    - name: DEVICE_ID
+      value: "2"
+    - name: DEVICE_SYS_ADDR
+      value: /dev/ttyS0
+    - name: MQTT_SERVER_ADDR
+      value: "192.168.1.199"
+    - name: MQTT_PORT
+      value: "1883"
+    - name: MQTT_USER
+      value: "srne_user"
+    - name: MQTT_PASS
+      value: "qwe123"
+    - name: PUBLISH_BROKER_ENABLED
+      value: "false"
+
+trafficlightMode:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "localhost:5000/service-trafficlight-mode"
+    tag: "8084d984123b18242271ace77c36ea7958d5017f"
+  extraEnv:
+    - name: DEVICE_ID
+      value: "2"
+
+

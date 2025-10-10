@@ -1,0 +1,89 @@
+# solar-system-chart/templates/srne-adaptor-deployment.yaml
+
+{{- if .Values.srneAdaptor.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-srne-adaptor
+  labels:
+    {{- include "solar-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: srne-adaptor
+spec:
+  replicas: {{ .Values.srneAdaptor.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "solar-system.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: srne-adaptor
+  template:
+    metadata:
+      labels:
+        {{- include "solar-system.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: srne-adaptor
+    spec:
+      # Этот securityContext применяется ко всему поду,
+      # чтобы дать ему доступ к группе 'dialout' на хосте.
+      securityContext:
+        supplementalGroups: [ 20 ] # dialout group
+      containers:
+        - name: srne-adaptor-service
+          #image: "{{ .Values.global.dockerhubUsername }}/{{ .Values.srneAdaptor.image.repository }}:{{ .Values.srneAdaptor.image.tag }}"
+          image: "{{ .Values.srneAdaptor.image.repository }}:{{ .Values.srneAdaptor.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            # --- Общие настройки из global ---
+            - name: DB_HOST
+              value: {{ .Values.global.database.host | quote }}
+            - name: DB_NAME
+              value: {{ .Values.global.database.name | quote }}
+            - name: DB_PASSWORD
+              value: {{ .Values.global.database.password | quote }}
+            - name: DB_PORT
+              value: {{ .Values.global.database.port | quote }}
+            - name: DB_USER
+              value: {{ .Values.global.database.user | quote }}
+            - name: REDIS_HOST
+              value: {{ .Values.global.redis.host | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.global.redis.port | quote }}
+            # --- Специфичные для этого сервиса переменные ---
+            {{- with .Values.srneAdaptor.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+
+          # Этот securityContext дает контейнеру расширенные права
+          securityContext:
+            privileged: {{ .Values.srneAdaptor.securityContext.privileged }}
+
+          # Пробрасываем устройство с хоста внутрь контейнера
+          volumeMounts:
+            - name: tty-device
+              mountPath: {{ .Values.srneAdaptor.devicePath }} # Куда монтировать ВНУТРИ контейнера
+
+          livenessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+      # Определяем том, который будем пробрасывать
+      volumes:
+        - name: tty-device # Имя должно совпадать с volumeMounts.name
+          hostPath:
+            path: {{ .Values.srneAdaptor.devicePath }} # Путь к устройству НА ХОСТЕ (Raspberry Pi)
+            type: CharDevice # Указываем, что это символьное устройство
+      restartPolicy: Always
+{{- end }}

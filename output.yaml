@@ -1,0 +1,617 @@
+---
+# Source: solar-system/templates/api-service.yaml
+# solar-system-chart/templates/api-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: solar-main-api-service
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: api
+spec:
+  type: ClusterIP
+  ports:
+    - name: "5011"
+      protocol: TCP
+      port: 5011
+      targetPort: 5011
+  selector:
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/component: api
+---
+# Source: solar-system/templates/frontend-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: solar-main-frontend-service
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/component: frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+# Source: solar-system/templates/test-service-all-in-one.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: solar-main-test-service
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: test-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/component: test-service
+  ports:
+  - protocol: TCP
+    port: 8001
+    targetPort: 8001
+---
+# Source: solar-system/templates/api-deployment.yaml
+# solar-system-chart/templates/api-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar-main-api
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: solar-system
+      app.kubernetes.io/instance: solar-main
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: solar-system
+        app.kubernetes.io/instance: solar-main
+        app.kubernetes.io/component: api
+    spec:
+      containers:
+        - name: complex-api-service
+          image: "corlovtb/complex_api:latest"
+          imagePullPolicy: Always
+          command: ["python3", "complex.py"]
+          env:
+            # --- Общие настройки из global ---
+            - name: DB_HOST
+              value: "192.168.1.83"
+            - name: DB_NAME
+              value: "solar_controller_telemetry"
+            - name: DB_PASSWORD
+              value: "gen_postgress_password"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: REDIS_HOST
+              value: "192.168.1.83"
+            - name: REDIS_PORT
+              value: "6379"
+            # --- Специфичные для API переменные ---
+            - name: SECRET_KEY
+              value: uw3cok92adxmzpf35_secret_key_value_12082025
+            - name: EXP_LIMIT
+              value: "600"
+            - name: SSE_UPDATE_COMPLEX_STATUS_TIMEOUT
+              value: "3"
+            - name: SSE_UPDATE_DYNAMIC_DATA_TIMEOUT
+              value: "10"
+            - name: SSE_UPDATE_GPIO_TIMEOUT
+              value: "5"
+
+          ports:
+            - containerPort: 5011
+              protocol: TCP
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5011
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 5011
+            initialDelaySeconds: 50
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      restartPolicy: Always
+---
+# Source: solar-system/templates/frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar-main-frontend
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: solar-system
+      app.kubernetes.io/instance: solar-main
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: solar-system
+        app.kubernetes.io/instance: solar-main
+        app.kubernetes.io/component: frontend
+    spec:
+      containers:
+      - name: frontend-container
+        image: "corlovtb/solar-front:latest"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+---
+# Source: solar-system/templates/gpio-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar-main-gpio
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: gpio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: solar-system
+      app.kubernetes.io/instance: solar-main
+      app.kubernetes.io/component: gpio
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: solar-system
+        app.kubernetes.io/instance: solar-main
+        app.kubernetes.io/component: gpio
+    spec:
+      containers:
+        - name: gpio-service
+          image: "corlovtb/gpio:latest"
+          imagePullPolicy: Always
+          env:
+            - name: DB_HOST
+              value: "192.168.1.83"
+            - name: DB_NAME
+              value: "solar_controller_telemetry"
+            - name: DB_PASSWORD
+              value: "gen_postgress_password"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: REDIS_HOST
+              value: "192.168.1.83"
+            - name: REDIS_PORT
+              value: "6379"
+
+          livenessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+          securityContext:
+            privileged: true
+      restartPolicy: Always
+---
+# Source: solar-system/templates/lamp-mode-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar-main-lamp-mode
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: lamp-mode
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: solar-system
+      app.kubernetes.io/instance: solar-main
+      app.kubernetes.io/component: lamp-mode
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: solar-system
+        app.kubernetes.io/instance: solar-main
+        app.kubernetes.io/component: lamp-mode
+    spec:
+      containers:
+        - name: lamp-mode-service
+          image: "corlovtb/lamp_mode:latest"
+          imagePullPolicy: Always
+          env:
+            # --- Общие настройки из global ---
+            - name: DB_HOST
+              value: "192.168.1.83"
+            - name: DB_NAME
+              value: "solar_controller_telemetry"
+            - name: DB_PASSWORD
+              value: "gen_postgress_password"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: REDIS_HOST
+              value: "192.168.1.83"
+            - name: REDIS_PORT
+              value: "6379"
+            # --- Специфичные для этого сервиса переменные ---
+            - name: DEVICE_ID
+              value: "2"
+
+          livenessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+      restartPolicy: Always
+---
+# Source: solar-system/templates/srne-adaptor-deployment.yaml
+# solar-system-chart/templates/srne-adaptor-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar-main-srne-adaptor
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: srne-adaptor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: solar-system
+      app.kubernetes.io/instance: solar-main
+      app.kubernetes.io/component: srne-adaptor
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: solar-system
+        app.kubernetes.io/instance: solar-main
+        app.kubernetes.io/component: srne-adaptor
+    spec:
+      # Этот securityContext применяется ко всему поду,
+      # чтобы дать ему доступ к группе 'dialout' на хосте.
+      securityContext:
+        supplementalGroups: [ 20 ] # dialout group
+      containers:
+        - name: srne-adaptor-service
+          image: "corlovtb/srne_adaptor:latest"
+          imagePullPolicy: Always
+          env:
+            # --- Общие настройки из global ---
+            - name: DB_HOST
+              value: "192.168.1.83"
+            - name: DB_NAME
+              value: "solar_controller_telemetry"
+            - name: DB_PASSWORD
+              value: "gen_postgress_password"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: REDIS_HOST
+              value: "192.168.1.83"
+            - name: REDIS_PORT
+              value: "6379"
+            # --- Специфичные для этого сервиса переменные ---
+            - name: DEVICE_ID
+              value: "2"
+            - name: DEVICE_SYS_ADDR
+              value: /dev/ttyS0
+            - name: MQTT_SERVER_ADDR
+              value: 192.168.1.199
+            - name: MQTT_PORT
+              value: "1883"
+            - name: MQTT_USER
+              value: srne_user
+            - name: MQTT_PASS
+              value: qwe123
+            - name: PUBLISH_BROKER_ENABLED
+              value: "false"
+
+          # Этот securityContext дает контейнеру расширенные права
+          securityContext:
+            privileged: true
+
+          # Пробрасываем устройство с хоста внутрь контейнера
+          volumeMounts:
+            - name: tty-device
+              mountPath: /dev/ttyS0 # Куда монтировать ВНУТРИ контейнера
+
+          livenessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+      # Определяем том, который будем пробрасывать
+      volumes:
+        - name: tty-device # Имя должно совпадать с volumeMounts.name
+          hostPath:
+            path: /dev/ttyS0 # Путь к устройству НА ХОСТЕ (Raspberry Pi)
+            type: CharDevice # Указываем, что это символьное устройство
+      restartPolicy: Always
+---
+# Source: solar-system/templates/test-service-all-in-one.yaml
+# solar-system-chart/templates/test-service-all-in-one.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar-main-test-service
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: test-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: solar-system
+      app.kubernetes.io/instance: solar-main
+      app.kubernetes.io/component: test-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: solar-system
+        app.kubernetes.io/instance: solar-main
+        app.kubernetes.io/component: test-service
+    spec:
+      containers:
+      - name: test-service-container
+        # Обрати внимание: здесь мы не используем global.dockerhubUsername,
+        # так как в values.yaml указан полный путь к образу.
+        image: "corlovtb/test-service:latest"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8001
+---
+# Source: solar-system/templates/trafficlight-mode-deployment.yaml
+# solar-system-chart/templates/trafficlight-mode-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solar-main-trafficlight-mode
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: trafficlight-mode
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: solar-system
+      app.kubernetes.io/instance: solar-main
+      app.kubernetes.io/component: trafficlight-mode
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: solar-system
+        app.kubernetes.io/instance: solar-main
+        app.kubernetes.io/component: trafficlight-mode
+    spec:
+      containers:
+        - name: trafficlight-mode-service
+          image: "corlovtb/traffic_light_mode:latest"
+          imagePullPolicy: Always
+          env:
+            # --- Общие настройки из global ---
+            - name: DB_HOST
+              value: "192.168.1.83"
+            - name: DB_NAME
+              value: "solar_controller_telemetry"
+            - name: DB_PASSWORD
+              value: "gen_postgress_password"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: REDIS_HOST
+              value: "192.168.1.83"
+            - name: REDIS_PORT
+              value: "6379"
+            # --- Специфичные для этого сервиса переменные ---
+            - name: DEVICE_ID
+              value: "2"
+
+          livenessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+              - python3
+              - health_check.py
+            initialDelaySeconds: 70
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
+      restartPolicy: Always
+---
+# Source: solar-system/templates/api-ingress.yaml
+# solar-system-chart/templates/api-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: solar-main-api-ingress
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: api
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - "api.solar.local"
+    secretName: solar-tls-secret
+  rules:
+  - host: "api.solar.local"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: solar-main-api-service # Имя нашего сервиса API
+            port:
+              number: 5011 # Порт нашего сервиса API
+---
+# Source: solar-system/templates/frontend-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: solar-main-frontend-ingress
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: frontend
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: "solar.local"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: solar-main-frontend-service
+            port:
+              number: 80
+---
+# Source: solar-system/templates/test-service-all-in-one.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: solar-main-test-service-ingress
+  labels:
+    helm.sh/chart: solar-system
+    app.kubernetes.io/name: solar-system
+    app.kubernetes.io/instance: solar-main
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: test-service
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - "test.solar.local"
+    secretName: solar-tls-secret
+  rules:
+  - host: "test.solar.local"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: solar-main-test-service
+            port:
+              number: 8001

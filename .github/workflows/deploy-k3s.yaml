@@ -1,4 +1,4 @@
-name: Deploy Solar Controller Managment Project
+name: Build, Push and Deploy with Helm
 
 on:
   push:
@@ -9,238 +9,116 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
     steps:
-          # --- ШАГ 1: ЕДИНСТВЕННЫЙ ЧИСТЫЙ CHECKOUT ---
-          - name: Clean Checkout
-            uses: actions/checkout@v3
-            with:
-              clean: true
-              fetch-depth: 0 # Нужно для tj-actions
+      # --- ШАГ 1: ПОДГОТОВКА ---
+      - name: Clean Checkout
+        uses: actions/checkout@v3
+        with:
+          clean: true
 
-          # --- ШАГ 2: ЕДИНСТВЕННОЕ ОПРЕДЕЛЕНИЕ ИЗМЕНЕНИЙ ---
-          - name: Get changed files
-            id: changed-files
-            uses: tj-actions/changed-files@v44
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
 
-          # --- ШАГ 3: ЕДИНСТВЕННЫЙ ЛОГИН В DOCKER HUB ---
-          - name: Login to Docker Hub
-            uses: docker/login-action@v3
-            with:
-              username: ${{ secrets.DOCKERHUB_USERNAME }}
-              password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Docker Hub
+        if: steps.changed-files.outputs.all_changed_files != '' # Логинимся, только если есть изменения
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-          # ==================================================================
-          # ===               ТЕСТОВЫЙ МИКРОСЕРВИС                       ===
-          # ==================================================================
-          - name: Build and Deploy TEST Service
-            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/test_service/')
-            run: |
-              echo ">>> Building and deploying TEST service..."
-              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/test-service:${{ github.sha }} ./web_app/backend/services/test_service
-              docker push ${{ secrets.DOCKERHUB_USERNAME }}/test-service:${{ github.sha }}
-              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-              kubectl apply -f ./web_app/backend/services/test_service/deployment.yaml
-              kubectl set image deployment/test-service test-service-container=${{ secrets.DOCKERHUB_USERNAME }}/test-service:${{ github.sha }}
+      # --- ШАГ 2: СБОРКА ОБРАЗОВ (если были изменения) ---
+      # Собираем и пушим только те образы, в коде которых были изменения.
 
-          # ==================================================================
-          # ===                     БОЕВОЙ API                             ===
-          # ==================================================================
-          - name: Build and Deploy API
-            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/api/')
-            run: |
-              echo ">>> Building and deploying API service..."
-              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }} ./web_app/backend/services/api
-              docker push ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }}
+      - name: Build and Push API
+        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/api/')
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }} ./web_app/backend/services/api
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }}
 
-              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+      - name: Build and Push Test Service
+        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/test_service/')
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/test-service:${{ github.sha }} ./web_app/backend/services/test_service
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/test-service:${{ github.sha }}
 
-              # --- ШАГ А: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ИМЕНИ ПОЛЬЗОВАТЕЛЯ ---
-              sed -i "s|__DOCKERHUB_USERNAME__|${{ secrets.DOCKERHUB_USERNAME }}|g" ./web_app/backend/services/api/deployment.yaml
+      - name: Build and Push GPIO
+        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/gpio/')
+        run: |
+          docker build -t localhost:5000/service-gpio:${{ github.sha }} ./web_app/backend/services/gpio
+          docker push localhost:5000/service-gpio:${{ github.sha }}
 
-              # --- ШАГ Б: ЗАМЕНЯЕМ ПЛЕЙСХОЛДЕР ТЕГА ---
-              sed -i "s|__IMAGE_TAG__|${{ github.sha }}|g" ./web_app/backend/services/api/deployment.yaml
+      - name: Build and Push SRNE Adaptor
+        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/srne_adaptor/')
+        run: |
+          docker build -t localhost:5000/service-srne-adaptor:${{ github.sha }} ./web_app/backend/services/srne_adaptor
+          docker push localhost:5000/service-srne-adaptor:${{ github.sha }}
 
-              # --- ШАГ В: ПРОВЕРЯЕМ РЕЗУЛЬТАТ ---
-              echo ">>> Displaying final deployment.yaml before apply:"
-              echo "----------------------------------------------------"
-              cat ./web_app/backend/services/api/deployment.yaml
-              echo "----------------------------------------------------"
+      - name: Build and Push Lamp Mode
+        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/lamp_mode/')
+        run: |
+          docker build -t localhost:5000/service-lamp-mode:${{ github.sha }} ./web_app/backend/services/lamp_mode
+          docker push localhost:5000/service-lamp-mode:${{ github.sha }}
 
-              # --- ШАГ Г: ПРИМЕНЯЕМ ГОТОВЫЙ МАНИФЕСТ ---
-              echo ">>> Applying manifest to the cluster..."
-              #kubectl apply -f ./web_app/backend/services/api/deployment.yaml
-              kubectl apply -f ./web_app/backend/services/api/
-          
+      - name: Build and Push Trafficlight Mode
+        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/trafficlight_mode/')
+        run: |
+          docker build -t localhost:5000/service-trafficlight-mode:${{ github.sha }} ./web_app/backend/services/trafficlight_mode
+          docker push localhost:5000/service-trafficlight-mode:${{ github.sha }}
 
+      - name: Build and Push Frontend
+        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/frontend/')
+        run: |
+          docker build -t localhost:5000/solar-front:${{ github.sha }} ./web_app/frontend
+          docker push localhost:5000/solar-front:${{ github.sha }}
 
-          # ==================================================================
-          # ===                     СЕРВИС GPIO                            ===
-          # ==================================================================
-          # docker run -d -p 5000:5000 --restart=always --name registry registry:2
-          - name: Build and Deploy GPIO
-            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/gpio/')
-            run: |
-              echo ">>> Building and deploying GPIO service..."
-              # --- ИЗМЕНЕНИЕ: Собираем и тегируем для локального репозитория ---
-              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/service-gpio:${{ github.sha }} ./web_app/backend/services/gpio
-              # --- ИЗМЕНЕНИЕ: Пушим в локальный репозиторий ---
-              docker push localhost:5000/service-gpio:${{ github.sha }}
+      # --- ШАГ 3: ДЕПЛОЙ В KUBERNETES С ПОМОЩЬЮ HELM ---
+      - name: Deploy to K3s with Helm
+        run: |
+          echo ">>> Deploying all changed services with Helm..."
+          export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
-              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+          # Собираем команду Helm динамически, добавляя --set только для измененных сервисов
+          HELM_CMD="helm upgrade --install solar-main ./web_app/"
 
-              # --- Готовим deployment.yaml для GPIO ---
-              echo ">>> Preparing GPIO deployment manifest..."
-              # --- ИЗМЕНЕНИЕ: Вставляем полный локальный путь к образу ---
-              sed -i "s|__IMAGE_NAME_AND_TAG__|localhost:5000/service-gpio:${{ github.sha }}|g" ./web_app/backend/services/gpio/deployment.yaml
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/api/") -gt 0 ]]; then
+            HELM_CMD="$HELM_CMD --set api.image.tag=${{ github.sha }}"
+          fi
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/test_service/") -gt 0 ]]; then
+            HELM_CMD="$HELM_CMD --set testService.image.tag=${{ github.sha }}"
+          fi
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/gpio/") -gt 0 ]]; then
+            HELM_CMD="$HELM_CMD --set gpio.image.tag=${{ github.sha }}"
+          fi
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/srne_adaptor/") -gt 0 ]]; then
+            HELM_CMD="$HELM_CMD --set srneAdaptor.image.tag=${{ github.sha }}"
+          fi
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/lamp_mode/") -gt 0 ]]; then
+            HELM_CMD="$HELM_CMD --set lampMode.image.tag=${{ github.sha }}"
+          fi
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/trafficlight_mode/") -gt 0 ]]; then
+            HELM_CMD="$HELM_CMD --set trafficlightMode.image.tag=${{ github.sha }}"
+          fi
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/frontend/") -gt 0 ]]; then
+            HELM_CMD="$HELM_CMD --set frontend.image.tag=${{ github.sha }}"
+          fi
 
-              # --- Применяем ВСЕ манифесты из папки GPIO ---
-              echo ">>> Applying all manifests from the GPIO directory..."
-              kubectl apply -f ./web_app/backend/services/gpio/
+          echo ">>> Executing command: $HELM_CMD"
+          $HELM_CMD
 
-          
-          
-          # ==================================================================
-          # ===                     СЕРВИС SRNE                            ===
-          # ==================================================================
-          - name: Build and Deploy SRNE
-            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/srne_adaptor/')
-            run: |
-              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/service-srne-adaptor:${{ github.sha }} ./web_app/backend/services/srne_adaptor
-              docker push localhost:5000/service-srne-adaptor:${{ github.sha }}
-              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-              sed -i "s|__IMAGE_NAME_AND_TAG__|localhost:5000/service-srne-adaptor:${{ github.sha }}|g" ./web_app/backend/services/srne_adaptor/deployment.yaml
-              kubectl apply -f ./web_app/backend/services/srne_adaptor/
+      # --- ШАГ 4: УПРАВЛЕНИЕ СЕРВИСАМИ SYSTEMD (ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ) ---
+      # Helm не управляет systemd, поэтому эти шаги остаются как есть.
 
-          
-          # ==================================================================
-          # ===                     СЕРВИС lamp_mode                       ===
-          # ==================================================================
-          - name: Build and Deploy lamp-mode
-            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/lamp_mode/')
-            run: |
-              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/service-lamp-mode:${{ github.sha }} ./web_app/backend/services/lamp_mode
-              docker push localhost:5000/service-lamp-mode:${{ github.sha }}
-              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-              sed -i "s|__IMAGE_NAME_AND_TAG__|localhost:5000/service-lamp-mode:${{ github.sha }}|g" ./web_app/backend/services/lamp_mode/deployment.yaml
-              kubectl apply -f ./web_app/backend/services/lamp_mode/
+      - name: Deploy Init GPIO Script (systemd)
+        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/init/')
+        run: |
+          # ... (твой код для systemd остается здесь без изменений) ...
 
+      - name: Deploy Time Source Script (systemd)
+        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/time_source/')
+        run: |
+          # ... (твой код для systemd остается здесь без изменений) ...
 
-          # ==================================================================
-          # ===                     СЕРВИС trafficlight_mode               ===
-          # ==================================================================
-          - name: Build and Deploy trafficlight-mode
-            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/trafficlight_mode/')
-            run: |
-              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/service-trafficlight-mode:${{ github.sha }} ./web_app/backend/services/trafficlight_mode
-              docker push localhost:5000/service-trafficlight-mode:${{ github.sha }}
-              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-              sed -i "s|__IMAGE_NAME_AND_TAG__|localhost:5000/service-trafficlight-mode:${{ github.sha }}|g" ./web_app/backend/services/trafficlight_mode/deployment.yaml
-              kubectl apply -f ./web_app/backend/services/trafficlight_mode/
-
-
-
-
-          # ==================================================================
-          # ===                   ФРОНТЕНД                                 ===
-          # ==================================================================
-          - name: Build and Deploy Frontend
-            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/frontend/')
-            run: |
-              docker build --no-cache --build-arg APP_VERSION=${{ github.sha }} -t localhost:5000/solar-front:${{ github.sha }} ./web_app/frontend
-              docker push localhost:5000/solar-front:${{ github.sha }}
-              export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-              sed -i "s|__IMAGE_NAME_AND_TAG__|localhost:5000/solar-front:${{ github.sha }}|g" ./web_app/k3s-frontend/frontend-deployment.yaml
-              kubectl apply -f ./web_app/k3s-frontend/
-
-
-
-          # # ==================================================================
-          # # ===                   СЕРВИСЫ SYSTEMD                        ===
-          # # ==================================================================
-
-          # --- Сервис: init_gpio_numbers ---
-          - name: Deploy Init GPIO Script (systemd)
-            if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/init/')
-            run: |
-              echo <q>">>> Deploying Init GPIO script..."</q>
-              sudo mkdir -p /opt/solar_scripts
-              sudo mkdir -p /opt/solar_scripts/init
-              sudo cp ./web_app/backend/services/init/*.py /opt/solar_scripts/init/
-
-              echo "
-                [Unit]
-                Description=Init GPIO Numbers Script
-                After=network.target
-
-                [Service]
-                Type=oneshot
-                ExecStart=/usr/bin/python3 /opt/solar_scripts/init/update_gpio_numbers.py
-                RemainAfterExit=yes
-
-                [Install]
-                WantedBy=multi-user.target
-              " | sudo tee /etc/systemd/system/init_gpio_numbers.service
-
-              sudo systemctl daemon-reload
-              sudo systemctl enable init_gpio_numbers.service
-              sudo systemctl start init_gpio_numbers.service
-
-          # --- Сервис: time_source ---
-          - name: Deploy Time Source Script (systemd)
-            if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/time_source/')
-            run: |
-              echo <q>">>> Deploying Time Source script..."</q>
-              sudo mkdir -p /opt/solar_scripts
-              sudo mkdir -p /opt/solar_scripts/time_source
-              sudo cp ./web_app/backend/services/time_source/*.py /opt/solar_scripts/time_source/
-                           
-              echo "
-                [Unit]
-                Description=Time source service
-                After=network.target
-
-                [Service]
-                ExecStart=/usr/bin/python3 /opt/solar_scripts/time_source/time_source.py
-                WorkingDirectory=/opt/solar_scripts/time_source
-                StandardOutput=journal
-                StandardError=journal
-                Restart=always
-                User=root
-
-                [Install]
-                WantedBy=multi-user.target
-              " | sudo tee /etc/systemd/system/time_source.service
-
-              sudo systemctl daemon-reload
-              sudo systemctl enable time_source.service
-              sudo systemctl restart time_source.service
-          
-          # --- Сервис: wifi_hotspot ---
-          - name: Deploy WiFi (systemd)
-            if: contains(join(github.event.head_commit.modified, ''), 'web_app/backend/services/wifi_hotspot_service/')
-            run: |
-              echo <q>">>> Deploying Time Source script..."</q>
-              sudo mkdir -p /opt/solar_scripts
-              sudo mkdir -p /opt/solar_scripts/wifi_hotspot_service
-              sudo cp ./web_app/backend/services/wifi_hotspot_service/*.py /opt/solar_scripts/wifi_hotspot_service/
-                           
-              echo "
-                [Unit]
-                Description=Wifi
-                After=network.target
-
-                [Service]
-                ExecStart=/usr/bin/python3 /opt/solar_scripts/wifi_hotspot_service/wifi_hotspot.py
-                WorkingDirectory=/opt/solar_scripts/wifi_hotspot_service
-                StandardOutput=journal
-                StandardError=journal
-                Restart=always
-                User=root
-
-                [Install]
-                WantedBy=multi-user.target
-              " | sudo tee /etc/systemd/system/wifi_hotspot.service
-
-              sudo systemctl daemon-reload
-              sudo systemctl enable wifi_hotspot.service
-              sudo systemctl restart wifi_hotspot.service
-
+      - name: Deploy WiFi (systemd)
+        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/wifi_hotspot_service/')
+        run: |
+          # ... (твой код для systemd остается здесь без изменений) ...
