@@ -30,45 +30,45 @@ jobs:
       # Собираем и пушим только те образы, в коде которых были изменения.
 
       - name: Build and Push API
-        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/api/')
+        if: contains(steps.changed-files.outputs.all_changed_files, 'complex/backend/services/api/')
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }} ./web_app/backend/services/api
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }} ./complex/backend/services/api
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/complex_api:${{ github.sha }}
 
       - name: Build and Push Test Service
-        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/test_service/')
+        if: contains(steps.changed-files.outputs.all_changed_files, 'complex/backend/services/test_service/')
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/test-service:${{ github.sha }} ./web_app/backend/services/test_service
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/test-service:${{ github.sha }} ./complex/backend/services/test_service
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/test-service:${{ github.sha }}
 
       - name: Build and Push GPIO
-        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/gpio/')
+        if: contains(steps.changed-files.outputs.all_changed_files, 'complex/backend/services/gpio/')
         run: |
-          docker build -t localhost:5000/service-gpio:${{ github.sha }} ./web_app/backend/services/gpio
+          docker build -t localhost:5000/service-gpio:${{ github.sha }} ./complex/backend/services/gpio
           docker push localhost:5000/service-gpio:${{ github.sha }}
 
       - name: Build and Push SRNE Adaptor
-        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/srne_adaptor/')
+        if: contains(steps.changed-files.outputs.all_changed_files, 'complex/backend/services/srne_adaptor/')
         run: |
-          docker build -t localhost:5000/service-srne-adaptor:${{ github.sha }} ./web_app/backend/services/srne_adaptor
+          docker build -t localhost:5000/service-srne-adaptor:${{ github.sha }} ./complex/backend/services/srne_adaptor
           docker push localhost:5000/service-srne-adaptor:${{ github.sha }}
 
       - name: Build and Push Lamp Mode
-        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/lamp_mode/')
+        if: contains(steps.changed-files.outputs.all_changed_files, 'complex/backend/services/lamp_mode/')
         run: |
-          docker build -t localhost:5000/service-lamp-mode:${{ github.sha }} ./web_app/backend/services/lamp_mode
+          docker build -t localhost:5000/service-lamp-mode:${{ github.sha }} ./complex/backend/services/lamp_mode
           docker push localhost:5000/service-lamp-mode:${{ github.sha }}
 
       - name: Build and Push Trafficlight Mode
-        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/trafficlight_mode/')
+        if: contains(steps.changed-files.outputs.all_changed_files, 'complex/backend/services/trafficlight_mode/')
         run: |
-          docker build -t localhost:5000/service-trafficlight-mode:${{ github.sha }} ./web_app/backend/services/trafficlight_mode
+          docker build -t localhost:5000/service-trafficlight-mode:${{ github.sha }} ./complex/backend/services/trafficlight_mode
           docker push localhost:5000/service-trafficlight-mode:${{ github.sha }}
 
       - name: Build and Push Frontend
-        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/frontend/')
+        if: contains(steps.changed-files.outputs.all_changed_files, 'complex/frontend/')
         run: |
-          docker build -t localhost:5000/solar-front:${{ github.sha }} ./web_app/frontend
+          docker build -t localhost:5000/solar-front:${{ github.sha }} ./complex/frontend
           docker push localhost:5000/solar-front:${{ github.sha }}
 
       # --- ШАГ 3: ДЕПЛОЙ В KUBERNETES С ПОМОЩЬЮ HELM ---
@@ -78,27 +78,27 @@ jobs:
           export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
           # Собираем команду Helm динамически, добавляя --set только для измененных сервисов
-          HELM_CMD="helm upgrade --install solar-main ./web_app/"
+          HELM_CMD="helm upgrade --install solar-main ./complex/"
 
-          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/api/") -gt 0 ]]; then
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "complex/backend/services/api/") -gt 0 ]]; then
             HELM_CMD="$HELM_CMD --set api.image.tag=${{ github.sha }}"
           fi
-          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/test_service/") -gt 0 ]]; then
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "complex/backend/services/test_service/") -gt 0 ]]; then
             HELM_CMD="$HELM_CMD --set testService.image.tag=${{ github.sha }}"
           fi
-          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/gpio/") -gt 0 ]]; then
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "complex/backend/services/gpio/") -gt 0 ]]; then
             HELM_CMD="$HELM_CMD --set gpio.image.tag=${{ github.sha }}"
           fi
-          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/srne_adaptor/") -gt 0 ]]; then
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "complex/backend/services/srne_adaptor/") -gt 0 ]]; then
             HELM_CMD="$HELM_CMD --set srneAdaptor.image.tag=${{ github.sha }}"
           fi
-          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/lamp_mode/") -gt 0 ]]; then
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "complex/backend/services/lamp_mode/") -gt 0 ]]; then
             HELM_CMD="$HELM_CMD --set lampMode.image.tag=${{ github.sha }}"
           fi
-          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/backend/services/trafficlight_mode/") -gt 0 ]]; then
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "complex/backend/services/trafficlight_mode/") -gt 0 ]]; then
             HELM_CMD="$HELM_CMD --set trafficlightMode.image.tag=${{ github.sha }}"
           fi
-          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "web_app/frontend/") -gt 0 ]]; then
+          if [[ $(echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -c "complex/frontend/") -gt 0 ]]; then
             HELM_CMD="$HELM_CMD --set frontend.image.tag=${{ github.sha }}"
           fi
 
@@ -109,16 +109,16 @@ jobs:
       # Helm не управляет systemd, поэтому эти шаги остаются как есть.
 
       - name: Deploy Init GPIO Script (systemd)
-        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/init/')
+        if: contains(steps.changed-files.outputs.all_changed_files, 'complex/backend/services/init/')
         run: |
           # ... (твой код для systemd остается здесь без изменений) ...
 
       - name: Deploy Time Source Script (systemd)
-        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/time_source/')
+        if: contains(steps.changed-files.outputs.all_changed_files, 'complex/backend/services/time_source/')
         run: |
           # ... (твой код для systemd остается здесь без изменений) ...
 
       - name: Deploy WiFi (systemd)
-        if: contains(steps.changed-files.outputs.all_changed_files, 'web_app/backend/services/wifi_hotspot_service/')
+        if: contains(steps.changed-files.outputs.all_changed_files, 'complex/backend/services/wifi_hotspot_service/')
         run: |
           # ... (твой код для systemd остается здесь без изменений) ...
